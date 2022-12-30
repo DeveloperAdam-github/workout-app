@@ -17,6 +17,9 @@ module.exports = {
       fontSize: {
         xxs: '0.60rem',
       },
+      animation: {
+        'ping-once': 'ping 1s linear',
+      },
     },
   },
   plugins: [require('daisyui')],

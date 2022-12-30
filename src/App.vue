@@ -10,7 +10,9 @@ import Navbar from './components/Navbar.vue';
         <component :is="Component"></component>
       </transition>
     </router-view>
-    <Navbar v-show="$route.path !== '/workout'" />
+    <Navbar
+      v-show="$route.path !== '/workout' && $route.path !== '/add-workout'"
+    />
   </div>
 </template>
 

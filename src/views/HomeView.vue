@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useUserStore } from '../stores/user';
 import { useGlobalStore } from '../stores/global';
+import { usePopularWorkoutStore } from '../stores/popularWorkouts';
 import BigWorkoutCard from '../components/BigWorkoutCard.vue';
 import womanWorkout from '../assets/images/woman.jpg';
 import StepOne from '../components/steps/StepOne.vue';
@@ -18,7 +19,10 @@ import BigWorkoutCard2 from '../components/BigWorkoutCard2.vue';
 const step = ref(1);
 const store = useUserStore();
 const globalStore = useGlobalStore();
+const popularWorkoutStore = usePopularWorkoutStore();
+
 const workoutsShown = ref(false);
+const popularWorkouts = ref(popularWorkoutStore.popularWorkouts);
 
 const stepProgress = (value) => {
   step.value = value;
@@ -60,9 +64,13 @@ const toggleWorkoutList = () => {
           ></i>
         </p>
         <div class="w-full carousel flex items-center">
-          <BigWorkoutCard />
-          <BigWorkoutCard2 />
-          <BigWorkoutCard />
+          <BigWorkoutCard
+            v-for="(workout, index) in popularWorkouts"
+            :workout="workout"
+            :key="index"
+          />
+          <!-- <BigWorkoutCard2 />
+          <BigWorkoutCard /> -->
         </div>
       </div>
     </transition>
@@ -83,6 +91,21 @@ const toggleWorkoutList = () => {
         <div class="w-full carousel flex items-center">
           <BigWorkoutCard />
           <BigWorkoutCard />
+          <router-link
+            to="/add-workout"
+            class="w-4/5 h-52 rounded-xl carousel-item mr-4 bg-cover bg-center flex flex-col text-black bg-white shadow-xl"
+          >
+            <div
+              class="p-4 flex flex-col justify-center items-center w-full h-full"
+            >
+              <p>Add New Workout</p>
+              <div
+                class="h-10 w-10 mt-4 rounded-full border border-gray-500 flex items-center justify-center"
+              >
+                <i class="fa-solid fa-plus text-gray-500"></i>
+              </div>
+            </div>
+          </router-link>
         </div>
       </div>
     </transition>

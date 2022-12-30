@@ -1,15 +1,17 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import Vue3TouchEvents from 'vue3-touch-events';
 
-import App from './App.vue'
-import router from './router'
+import App from './App.vue';
+import router from './router';
 
-import './assets/main.css'
-import './assets/tailwind.css'
+import './assets/main.css';
+import './assets/tailwind.css';
 
-const app = createApp(App)
+const app = createApp(App);
 
-app.use(createPinia())
-app.use(router)
+app.use(createPinia());
+app.use(router);
+app.use(Vue3TouchEvents);
 
-app.mount('#app')
+app.mount('#app');
