@@ -1,11 +1,11 @@
 <script setup>
-import TopBar from '../components/TopBar.vue';
-import womanSquatting from '../assets/images/womanSquatting.jpg';
-import inclineBench from '../assets/images/inclineBench.jpg';
-import woman from '../assets/images/woman2.jpg';
-import deadlift from '../assets/images/deadlift.jpg';
-import { useWorkoutStore } from '../stores/workout';
-import { ref } from 'vue';
+import TopBar from "../components/TopBar.vue";
+import womanSquatting from "../assets/images/womanSquatting.jpg";
+import inclineBench from "../assets/images/inclineBench.jpg";
+import woman from "../assets/images/woman2.jpg";
+import deadlift from "../assets/images/deadlift.jpg";
+import { useWorkoutStore } from "../stores/workout";
+import { ref } from "vue";
 
 const store = useWorkoutStore();
 
@@ -26,7 +26,7 @@ const addSetToExercise = (exerciseName, index) => {
 
 const removeSetFromExercise = (exerciseName, index) => {
   return function () {
-    console.log(exerciseName, index, 'any vlaues here?');
+    console.log(exerciseName, index, "any vlaues here?");
     // find the exercise in the chosenWorkout we want to remove a set from
     const exercise = chosenWorkout.value.exercises.find(
       (ex) => ex.name === exerciseName.name
@@ -34,7 +34,7 @@ const removeSetFromExercise = (exerciseName, index) => {
 
     const set = exercise.sets[index];
     set.deleted = true;
-    console.log(set, 'hello');
+    console.log(set, "hello");
 
     setTimeout(() => {
       exercise.sets.splice(index, 1);
@@ -45,7 +45,7 @@ const removeSetFromExercise = (exerciseName, index) => {
 const addExerciseToChosenWorkout = (exerciseName, index) => {
   // Add the new set to the exercise's sets array
   chosenWorkout.value.exercises.push({
-    name: '',
+    name: "",
     sets: [
       { weight: 0, reps: 0 },
       { weight: 0, reps: 0 },
@@ -67,7 +67,7 @@ const completeSet = (exerciseName, index) => {
 
   set.completed = true;
 
-  console.log(set, 'whats this');
+  console.log(set, "whats this");
 };
 </script>
 
@@ -76,10 +76,21 @@ const completeSet = (exerciseName, index) => {
     class="text-white h-full w-full bg-primary flex flex-col"
     v-if="store.chosenWorkout !== null"
   >
-    <TopBar :title="'Workout'" />
+    <div class="mt-5">
+      <TopBar :title="'Workout'" />
+    </div>
     <div class="w-full flex flex-col p-4">
       <div
-        class="h-52 w-full rounded-xl bg-cover bg-center relative flex items-center justify-center"
+        class="
+          h-52
+          w-full
+          rounded-xl
+          bg-cover bg-center
+          relative
+          flex
+          items-center
+          justify-center
+        "
         :style="{
           'background-image': chosenWorkout.tags.includes('upper', 'bench')
             ? `linear-gradient(to bottom, rgba(1,1,1,0.75), rgba(255,255,255,0.000001)), url(${inclineBench})`
@@ -94,12 +105,35 @@ const completeSet = (exerciseName, index) => {
           <h1 class="text-lg font-boldHeadline">{{ chosenWorkout.name }}</h1>
         </div>
         <div
-          class="absolute h-14 w-3/4 rounded-xl bg-transparent/70 flex -bottom-6 m-auto left-0 right-0 text-xs items-center p-1"
+          class="
+            absolute
+            h-14
+            w-3/4
+            rounded-xl
+            bg-transparent/70
+            flex
+            -bottom-6
+            m-auto
+            left-0
+            right-0
+            text-xs
+            items-center
+            p-1
+          "
         >
           <div class="w-1/2 flex h-full px-1">
             <div class="w-1/2 h-full flex p-2 items-center">
               <div
-                class="h-full bg-secondary w-full rounded-xl flex items-center justify-center text-xl"
+                class="
+                  h-full
+                  bg-secondary
+                  w-full
+                  rounded-xl
+                  flex
+                  items-center
+                  justify-center
+                  text-xl
+                "
               >
                 <i class="fa-solid fa-stopwatch text-black"></i>
               </div>
@@ -113,7 +147,16 @@ const completeSet = (exerciseName, index) => {
           <div class="w-1/2 flex h-full px-1">
             <div class="w-1/2 h-full flex p-2 items-center">
               <div
-                class="h-full bg-secondary w-full rounded-xl flex items-center justify-center text-xl"
+                class="
+                  h-full
+                  bg-secondary
+                  w-full
+                  rounded-xl
+                  flex
+                  items-center
+                  justify-center
+                  text-xl
+                "
               >
                 <i class="fa-solid fa-fire text-black"></i>
               </div>
@@ -157,8 +200,9 @@ const completeSet = (exerciseName, index) => {
             </thead>
             <tbody class="text-sm">
               <tr
-                class=""
+                class="py-4"
                 v-for="(set, index) in exercise.sets"
+                :key="index"
                 v-touch:swipe.left="removeSetFromExercise(exercise, index)"
                 :class="
                   set.deleted == true
@@ -172,7 +216,17 @@ const completeSet = (exerciseName, index) => {
                 <td>
                   <div
                     @click="completeSet(exercise, index)"
-                    class="flex items-center justify-center p-0.5 rounded-lg text-black transition-all duration-300 ease-in-out"
+                    class="
+                      flex
+                      items-center
+                      justify-center
+                      p-0.5
+                      rounded-lg
+                      text-black
+                      transition-all
+                      duration-300
+                      ease-in-out
+                    "
                     :class="
                       set?.completed === true ? 'bg-secondary' : 'bg-gray-400'
                     "
@@ -223,7 +277,16 @@ const completeSet = (exerciseName, index) => {
     <TopBar :title="'Workout'" />
     <div class="w-full flex flex-col p-4">
       <div
-        class="h-52 w-full rounded-xl bg-cover bg-center relative flex items-center justify-center"
+        class="
+          h-52
+          w-full
+          rounded-xl
+          bg-cover bg-center
+          relative
+          flex
+          items-center
+          justify-center
+        "
         :style="{
           'background-image': `linear-gradient(to bottom, rgba(1,1,1,0.95), rgba(255,255,255,0.02)), url(${womanSquatting})`,
         }"
@@ -232,12 +295,35 @@ const completeSet = (exerciseName, index) => {
           <h1 class="text-lg font-boldHeadline">Lower Body Workout</h1>
         </div>
         <div
-          class="absolute h-14 w-3/4 rounded-xl bg-transparent/70 flex -bottom-6 m-auto left-0 right-0 text-xs items-center p-1"
+          class="
+            absolute
+            h-14
+            w-3/4
+            rounded-xl
+            bg-transparent/70
+            flex
+            -bottom-6
+            m-auto
+            left-0
+            right-0
+            text-xs
+            items-center
+            p-1
+          "
         >
           <div class="w-1/2 flex h-full px-1">
             <div class="w-1/2 h-full flex p-2 items-center">
               <div
-                class="h-full bg-secondary w-full rounded-xl flex items-center justify-center text-xl"
+                class="
+                  h-full
+                  bg-secondary
+                  w-full
+                  rounded-xl
+                  flex
+                  items-center
+                  justify-center
+                  text-xl
+                "
               >
                 <i class="fa-solid fa-stopwatch text-black"></i>
               </div>
@@ -251,7 +337,16 @@ const completeSet = (exerciseName, index) => {
           <div class="w-1/2 flex h-full px-1">
             <div class="w-1/2 h-full flex p-2 items-center">
               <div
-                class="h-full bg-secondary w-full rounded-xl flex items-center justify-center text-xl"
+                class="
+                  h-full
+                  bg-secondary
+                  w-full
+                  rounded-xl
+                  flex
+                  items-center
+                  justify-center
+                  text-xl
+                "
               >
                 <i class="fa-solid fa-fire text-black"></i>
               </div>
