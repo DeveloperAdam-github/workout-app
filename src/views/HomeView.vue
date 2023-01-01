@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useUserStore } from '../stores/user';
 import { useGlobalStore } from '../stores/global';
 import { usePopularWorkoutStore } from '../stores/popularWorkouts';
@@ -18,16 +18,35 @@ import BigWorkoutCard2 from '../components/BigWorkoutCard2.vue';
 
 const step = ref(1);
 const store = useUserStore();
+const email = ref('');
+const token = ref('');
 const globalStore = useGlobalStore();
 const popularWorkoutStore = usePopularWorkoutStore();
 
 const workoutsShown = ref(false);
+const showLogin = ref(false);
+
+onMounted(() => {
+  setTimeout(() => {
+    showLogin.value = true;
+  }, 800);
+});
+
 const popularWorkouts = ref(popularWorkoutStore.popularWorkouts);
 
 const stepProgress = (value) => {
   step.value = value;
 
   console.log(step.value, 'whats the step now?');
+};
+
+const signUpWithEmail = () => {
+  // store.handleLogin(email.value);
+  store.signInWithEmail(email.value);
+};
+
+const verifyUserWithCode = () => {
+  store.verifyUserWithEmailCode(String(token.value));
 };
 
 const today = new Date();
@@ -49,7 +68,7 @@ const toggleWorkoutList = () => {
     v-if="store.user"
     class="text-black h-full w-full bg-gray-200 flex flex-col"
   >
-    <TopBar :title="'Welcome ' + store.user" />
+    <TopBar :title="'Welcome '" />
     <!-- Carousel -->
     <transition name="step" mode="out-in" v-show="workoutsShown === false">
       <div
@@ -176,6 +195,7 @@ const toggleWorkoutList = () => {
       :style="{ 'background-image': 'url(' + womanWorkout + ')' }"
     >
       <div
+        v-if="globalStore.userDetailsEntered === false"
         class="absolute bg-white w-full z-20 rounded-tr-3xl rounded-tl-3xl p-4 flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ease-out"
         :class="
           globalStore.userDetailsEntered === false
@@ -230,6 +250,47 @@ const toggleWorkoutList = () => {
         >
           <StepSix @stepProgress="stepProgress" :step="step" />
         </transition>
+      </div>
+      <div
+        v-if="store.userHold"
+        class="absolute bg-gray-200/90 w-full z-20 rounded-tr-3xl rounded-tl-3xl p-4 flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ease-out"
+        :class="
+          showLogin === true ? 'h-1/3 bottom-0' : 'h-0 -bottom-10 opacity-0'
+        "
+      >
+        <h2 class="uppercase font-headline text-lg">Enter your 6 digit code</h2>
+        <input
+          type="number"
+          v-model="token"
+          class="w-full bg-white shadow-md rounded-full my-5 p-2 px-3"
+        />
+        <button
+          @click="verifyUserWithCode"
+          class="h-12 rounded-full w-full bg-secondary shadow-md text-black my-1"
+        >
+          Verify Account
+        </button>
+      </div>
+      <div
+        v-else
+        class="absolute bg-gray-200/90 w-full z-20 rounded-tr-3xl rounded-tl-3xl p-4 flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ease-out"
+        :class="
+          showLogin === true ? 'h-1/3 bottom-0' : 'h-0 -bottom-10 opacity-0'
+        "
+      >
+        <h2 class="uppercase font-boldHeadline text-2xl">Login</h2>
+        <input
+          type="email"
+          v-model="email"
+          placeholder="Email address.."
+          class="w-full bg-white shadow-md rounded-full my-5 p-2 px-3"
+        />
+        <button
+          @click="signUpWithEmail"
+          class="h-12 rounded-full w-full bg-secondary shadow-md text-black my-1"
+        >
+          Sign Up
+        </button>
       </div>
     </div>
   </main>

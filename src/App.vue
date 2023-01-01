@@ -1,6 +1,11 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
 import Navbar from './components/Navbar.vue';
+import supabase from './supabase';
+
+import { useUserStore } from './stores/user';
+
+const store = useUserStore();
 </script>
 
 <template>
@@ -11,6 +16,7 @@ import Navbar from './components/Navbar.vue';
       </transition>
     </router-view>
     <Navbar
+      v-if="store.user !== null"
       v-show="$route.path !== '/workout' && $route.path !== '/add-workout'"
     />
   </div>

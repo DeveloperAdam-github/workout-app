@@ -11,6 +11,7 @@
     "@capacitor/android": "^4.6.1",
     "@capacitor/core": "^4.6.1",
     "@capacitor/ios": "^4.6.1",
+    "@supabase/supabase-js": "^2.2.3",
     "autoprefixer": "^10",
     "chart.js": "^3.9.1",
     "daisyui": "^2.46.0",
