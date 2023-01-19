@@ -1,8 +1,10 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import supabase from '../supabase';
+import { useGlobalStore } from './global';
 
 export const useUserStore = defineStore('user', () => {
+  const globalStore = useGlobalStore();
   const user = ref(localStorage.getItem('user') ?? null);
   const userSession = ref(localStorage.getItem('userSession') ?? null);
   const emailHold = ref('');
@@ -21,17 +23,17 @@ export const useUserStore = defineStore('user', () => {
     const { data, error } = await supabase.auth.signInWithOtp({
       email: email,
       type: 'magiclink',
-      // options: {
-      //   emailRedirectTo: 'https://example.com/welcome',
-      // },
     });
     alert('Check your email for your 6 digit code');
     emailHold.value = email;
     userHold.value = true;
+    globalStore.showNav = false;
+
     console.log(data, 'show me data?', error, 'show me error?');
   }
 
   async function verifyUserWithEmailCode(token) {
+    console.log(token, 'wot token');
     try {
       loading.value = true;
       const { data, error } = await supabase.auth.verifyOtp({
@@ -46,6 +48,12 @@ export const useUserStore = defineStore('user', () => {
         userSession.value = data.session;
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('userSession', JSON.stringify(data.session));
+
+        setTimeout(() => {
+          globalStore.showPopUpForDetail = true;
+
+          console.log(globalStore, 'whats global store');
+        }, 2000);
       }
     } catch (error) {
       if (error instanceof Error) {

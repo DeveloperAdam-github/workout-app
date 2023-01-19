@@ -3,11 +3,16 @@ import { defineStore } from 'pinia';
 
 export const useWorkoutStore = defineStore('workout', () => {
   const workout = ref(null);
+  const lastTenWorkouts = ref(null);
   const chosenWorkout = ref(null);
-
-  function pickChosenWorkout(value) {
-    chosenWorkout.value = value;
-  }
+  const workoutSet = ref(false);
+  const newWorkout = ref(false);
+  const freshWorkout = ref({
+    name: '',
+    exercises: [],
+    time: '',
+    calories: '',
+  });
 
   const workoutDetails = ref({
     name: '',
@@ -32,26 +37,14 @@ export const useWorkoutStore = defineStore('workout', () => {
           // { weight: 50, reps: 10 },
         ],
       },
-      // {
-      //   name: 'Tricep Dips',
-      //   sets: [
-      //     { weight: 50, reps: 10 },
-      //     { weight: 50, reps: 10 },
-      //     { weight: 50, reps: 10 },
-      //   ],
-      // },
-      // {
-      //   name: 'Incline DB Press',
-      //   sets: [
-      //     { weight: 32.5, reps: 6 },
-      //     { weight: 32.5, reps: 6 },
-      //     { weight: 32.5, reps: 6 },
-      //   ],
-      // },
     ],
     time: '',
     calories: '',
   });
+
+  function pickChosenWorkout(value) {
+    chosenWorkout.value = value;
+  }
 
   return {
     workout,
@@ -59,5 +52,9 @@ export const useWorkoutStore = defineStore('workout', () => {
     testWorkout,
     chosenWorkout,
     pickChosenWorkout,
+    workoutSet,
+    newWorkout,
+    freshWorkout,
+    lastTenWorkouts,
   };
 });

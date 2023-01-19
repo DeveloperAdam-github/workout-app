@@ -6,7 +6,7 @@ const props = defineProps({
 });
 </script>
 <template>
-  <div class="h-14 flex w-full items-end px-4">
+  <div class="h-20 flex w-full items-end px-4">
     <a @click="$router.go(-1)" class="cursor-pointer">
       <i class="fas fa-arrow-left text-xl"></i>
     </a>

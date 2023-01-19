@@ -14,8 +14,10 @@ const props = defineProps({
 });
 
 const progressStep = () => {
+  console.log('are we making it here yet?');
   emit('stepProgress', 7);
   globalStore.userDetailsEntered = true;
+  globalStore.showNav = true;
 };
 
 const updateUserGoals = (value) => {

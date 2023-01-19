@@ -1,7 +1,22 @@
+<script setup>
+import { ref } from 'vue';
+import { useUserStore } from '../stores/user';
+
+const userStore = useUserStore();
+const user = ref(userStore.user);
+</script>
+
 <template>
-  <div class="bottom-0 text-white absolute h-20 px-4 w-full z-10">
+  <div class="bottom-0 text-white absolute h-20 px-4 w-full z-10" v-show="user">
     <nav
-      class="h-16 bg-primary rounded-full w-full flex justify-around items-center"
+      class="h-16 rounded-full w-full flex justify-around items-center transition-all duration-700 ease-out"
+      :class="
+        $route.path === '/workout'
+          ? 'bg-gray-300'
+          : $route.path === '/new-workout'
+          ? 'bg-gray-300'
+          : 'bg-primary'
+      "
     >
       <router-link to="/" class="text-white">
         <div
@@ -9,19 +24,14 @@
           :class="
             $route.path === '/'
               ? 'bg-secondary rounded-3xl text-black transition-all duration-1000 ease-out px-2'
+              : $route.path === '/workout'
+              ? 'text-black'
+              : $route.path === '/new-workout'
+              ? 'text-black'
               : ' transition-all duration-500 ease-out '
           "
         >
           <i class="fa-solid fa-house-chimney md:text-4xl"></i>
-          <!-- <span
-            class="ml-2 overflow-hidden"
-            :class="
-              $route.path === '/'
-                ? 'w-min transition-all duration-1000 ease-out'
-                : 'w-0 transition-all duration-1000 ease-out '
-            "
-            >Home</span
-          > -->
         </div>
       </router-link>
       <router-link to="/workout" class="text-white">
@@ -30,19 +40,12 @@
           :class="
             $route.path === '/workout'
               ? 'bg-secondary rounded-3xl text-black transition-all duration-1000 ease-out px-2'
+              : $route.path === '/new-workout'
+              ? 'bg-secondary rounded-3xl text-black transition-all duration-1000 ease-out px-2'
               : ' transition-all duration-500 ease-out '
           "
         >
           <i class="fa-solid fa-rocket md:text-4xl"></i>
-          <!-- <span
-            class="ml-2 overflow-hidden transition-all duration-500 ease-out"
-            :class="
-              $route.path === '/workout'
-                ? 'w-min transition-all duration-1000 ease-out'
-                : 'w-0 transition-all duration-1000 ease-out '
-            "
-            >Workout</span
-          > -->
         </div>
       </router-link>
       <router-link to="/stats" class="text-white">
@@ -51,19 +54,14 @@
           :class="
             $route.path === '/stats'
               ? 'bg-secondary rounded-3xl text-black transition-all duration-1000 ease-out px-2'
+              : $route.path === '/workout'
+              ? 'text-black'
+              : $route.path === '/new-workout'
+              ? 'text-black'
               : ' transition-all duration-500 ease-out '
           "
         >
           <i class="fa-solid fa-chart-simple md:text-4xl"></i>
-          <!-- <span
-            class="ml-2 overflow-hidden transition-all duration-500 ease-out"
-            :class="
-              $route.path === '/stats'
-                ? 'w-min transition-all duration-1000 ease-out'
-                : 'w-0 transition-all duration-1000 ease-out '
-            "
-            >Stats</span
-          > -->
         </div>
       </router-link>
       <router-link to="/settings" class="text-white">
@@ -72,6 +70,10 @@
           :class="
             $route.path === '/settings'
               ? 'bg-secondary rounded-3xl text-black transition-all duration-1000 ease-out px-2'
+              : $route.path === '/workout'
+              ? 'text-black'
+              : $route.path === '/new-workout'
+              ? 'text-black'
               : ' transition-all duration-500 ease-out '
           "
         >

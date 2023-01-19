@@ -2,37 +2,16 @@
 import TopBar from '../components/TopBar.vue';
 import { useWorkoutStore } from '../stores/workout';
 import { usePopularWorkoutStore } from '../stores/popularWorkouts';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import YourRoutine from '../components/YourRoutine.vue';
 import LastWorkouts from '../components/LastWorkouts.vue';
-import { useRouter } from 'vue-router';
-import supabase from '../supabase';
-import { useUserStore } from '../stores/user';
 
 const store = useWorkoutStore();
-const userStore = useUserStore();
-const user = ref(userStore.user);
-const router = useRouter();
 const timerStarted = ref(false);
-const previousWorkouts = ref(store.lastTenWorkouts);
 const timer = ref({
   time: null,
   minutes: 0,
   seconds: 0,
-});
-
-const getPreviousWorkouts = async () => {
-  console.log('retrieving');
-  const { data, error } = await supabase
-    .from('workouts')
-    .select(`*, exercises(*, sets(*))`)
-    .eq('user', user.value.id);
-
-  previousWorkouts.value = data;
-};
-
-onMounted(() => {
-  getPreviousWorkouts();
 });
 
 const startTimer = () => {
@@ -145,7 +124,6 @@ const removeSetFromNewExercise = (exerciseName, index) => {
 
 const newWorkoutStarted = () => {
   startNewWorkout.value = true;
-  router.push('/new-workout');
 };
 
 const addSetToExercise = (exerciseName, index) => {
@@ -523,9 +501,7 @@ const completeSet = (exerciseName, index) => {
   <!-- END OF NEW WORKOUT VIEW -->
 
   <main class="text-white h-full w-full bg-primary flex flex-col">
-    <div>
-      <TopBar :title="'Your Workouts'" />
-    </div>
+    <TopBar :title="'Your Workouts'" />
     <div class="w-full flex h-full flex-col p-4">
       <p>Your routines</p>
       <div class="carousel w-full py-4">
@@ -554,12 +530,8 @@ const completeSet = (exerciseName, index) => {
         </button>
       </div>
       <p class="my-4">Last workouts..</p>
-      <div class="w-full h-[40%] carousel-vertical pb-12">
-        <LastWorkouts
-          v-for="(workout, index) in previousWorkouts"
-          :workout="workout"
-          :key="index"
-        />
+      <div class="w-full h-[40%] carousel-vertical">
+        <LastWorkouts v-for="(routine, index) in testRoutines" :key="index" />
       </div>
     </div>
   </main>

@@ -4,21 +4,21 @@ import Navbar from './components/Navbar.vue';
 import supabase from './supabase';
 
 import { useUserStore } from './stores/user';
+import { useGlobalStore } from './stores/global';
 
 const store = useUserStore();
+const globalStore = useGlobalStore();
 </script>
 
 <template>
   <div class="h-screen w-screen background overflow-hidden font-headline">
-    <router-view v-slot="{ Component }" class="h-full w-full">
+    <RouterView class="h-full w-full" />
+    <!-- <router-view v-slot="{ Component }" class="h-full w-full">
       <transition name="route" mode="out-in">
         <component :is="Component"></component>
       </transition>
-    </router-view>
-    <Navbar
-      v-if="store.user !== null"
-      v-show="$route.path !== '/workout' && $route.path !== '/add-workout'"
-    />
+    </router-view> -->
+    <Navbar v-if="store.user !== null" v-show="globalStore.showNav == true" />
   </div>
 </template>
 
