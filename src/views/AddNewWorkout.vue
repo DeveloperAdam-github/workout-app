@@ -1,11 +1,23 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import gym from '../assets/images/gym.png';
 import TopBar from '../components/TopBar.vue';
+import { useGlobalStore } from '../stores/global';
+import { useUserStore } from '../stores/user';
 import { useWorkoutStore } from '../stores/workout';
+import supabase from '../supabase';
 
 const store = useWorkoutStore();
+const globalStore = useGlobalStore();
 const workout = ref(store.testWorkout);
+const workoutId = ref(null);
+const exercisesArray = ref([]);
+const builtSetArray = ref([]);
+const showNav = ref(globalStore.showNav);
+const userStore = useUserStore();
+const user = ref(userStore.user);
+const router = useRouter();
 
 const addSetToExercise = (exerciseName, index) => {
   // Find the exercise in the workout
@@ -40,8 +52,90 @@ const addExerciseToWorkout = (exerciseName, index) => {
   });
 };
 
+onMounted(() => {
+  globalStore.hideNavFunction();
+});
+
 const removeExerciseFromWorkout = (index) => {
   workout.value.exercises.splice(index, 1);
+};
+
+const finishWorkout = async () => {
+  await supabase
+    .from('workouts')
+    .insert({
+      user: user.value.id,
+      workout_name: workout.value.name,
+      is_routine: true,
+    })
+    .select()
+    .then((response) => {
+      workoutId.value = response.data[0].id;
+    });
+
+  uploadExercises(workoutId.value);
+};
+
+const uploadExercises = async (id) => {
+  const exerciseArray = workout.value.exercises.map((ex) => {
+    return { name: ex.name, workout: id };
+  });
+
+  await supabase
+    .from('exercises')
+    .insert(exerciseArray)
+    .select()
+    .then((response) => {
+      // console.log(response.data, 'show us it here');
+      exercisesArray.value = response.data;
+    });
+
+  uploadSets(id);
+};
+
+const uploadSets = async (id) => {
+  let workoutId = id;
+  const exerciseArray = workout.value.exercises.map((ex) => {
+    return ex;
+  });
+
+  const exerciseIdToExercise = exercisesArray.value;
+
+  console.log(exerciseIdToExercise, 'exerciseIdToExercise');
+
+  exerciseArray.forEach((exercise) => {
+    console.log('each workout here', exercise);
+    const singleSet = exercise.sets.map((set) => {
+      let exerciseId = null;
+      const filteredExercises = exerciseIdToExercise.filter(
+        (ex) => ex.name === exercise.name
+      );
+      console.log(filteredExercises, 'wot dis');
+      if (filteredExercises.length) {
+        exerciseId = filteredExercises.find(
+          (ex) => ex.name === exercise.name
+        ).id;
+      }
+      return {
+        reps: set.reps,
+        weight: set.weight,
+        exercise: exerciseId,
+        completed: set.completed,
+        workout: workoutId,
+      };
+    });
+    builtSetArray.value.push(singleSet);
+  });
+
+  const flattenSets = builtSetArray.value.flat();
+
+  console.log(flattenSets, 'show me sets array thats built?');
+
+  await supabase.from('sets').insert(flattenSets);
+
+  store.setRoutineBackToTemplate();
+
+  router.back();
 };
 </script>
 <template>
@@ -55,7 +149,7 @@ const removeExerciseFromWorkout = (index) => {
         }"
       >
         <h2 class="text-white text-lg font-boldHeadline">
-          Create a new Workout
+          Create a new Routine
         </h2>
       </div>
     </div>
@@ -68,7 +162,7 @@ const removeExerciseFromWorkout = (index) => {
         >
         <input
           type="text"
-          class="bg-transparent border-black border-b-2 my-4 w-3/4"
+          class="bg-transparent border-black border-b-2 my-4 w-3/4 outline-secondary"
           placeholder="Workout Name"
           v-model="workout.name"
         />
@@ -84,7 +178,7 @@ const removeExerciseFromWorkout = (index) => {
                   <input
                     type="text"
                     placeholder="Exercise"
-                    class="bg-transparent"
+                    class="bg-transparent outline-secondary"
                     v-model="exercise.name"
                   />
                 </h2>
@@ -180,7 +274,10 @@ const removeExerciseFromWorkout = (index) => {
         </div>
       </div>
     </div>
-    <div class="bottom-0 text-white absolute h-20 px-4 w-full z-10">
+    <div
+      class="bottom-0 text-white absolute h-20 px-4 w-full z-10"
+      @click="finishWorkout"
+    >
       <button class="w-full h-10 rounded-full bg-primary">
         Create Workout
       </button>

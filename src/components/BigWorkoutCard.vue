@@ -24,7 +24,7 @@ const setChosenWorkout = (value) => {
       'background-image': `linear-gradient(to bottom, rgba(1,1,1,0.75), rgba(255,255,255,0.000001)), url(${womanSquatting})`,
     }" -->
   <router-link
-    to="/workout"
+    to="/workout-view"
     class="w-4/5 h-52 rounded-xl carousel-item mr-4 bg-cover bg-center flex flex-col text-white shadow-xl"
     :style="{
       'background-image': props.workout.tags.includes('upper', 'bench')
@@ -39,7 +39,7 @@ const setChosenWorkout = (value) => {
     v-if="props.workout"
   >
     <div class="p-4 flex flex-col">
-      <h1 class="text-lg">{{ props.workout.name }}</h1>
+      <h1 class="text-lg">{{ props.workout.workout_name }}</h1>
       <div class="">
         <div
           class="p-2 w-max bg-gray-100 flex items-center my-2 text-xs rounded-xl text-black"

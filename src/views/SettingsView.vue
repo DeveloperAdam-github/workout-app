@@ -7,5 +7,10 @@ const user = ref(store.user);
 </script>
 
 <template>
-  <h1>hello world {{ user.id }}</h1>
+  <div class="w-full h-full flex flex-col">
+    <div class="w-full flex">
+      <p>Hello</p>
+      <p>{{ user }}</p>
+    </div>
+  </div>
 </template>

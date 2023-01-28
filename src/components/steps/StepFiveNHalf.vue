@@ -14,11 +14,11 @@ const props = defineProps({
 });
 
 const progressStep = () => {
-  emit('stepProgress', 5.5);
+  emit('stepProgress', 6);
 };
 
-const updateUserHeightFt = (value) => {
-  store.userDetails.height.foot = value;
+const updateUserWeight = (value) => {
+  store.userDetails.weight = value;
 };
 
 const updateUserHeightInches = (value) => {
@@ -28,28 +28,16 @@ const updateUserHeightInches = (value) => {
 
 <template>
   <div class="flex flex-col w-full h-full justify-center items-center">
-    <h1 class="text-xl font-boldHeadline">What's your height?</h1>
-    <div class="w-full flex justify-center my-4">
+    <h1 class="text-xl font-boldHeadline">What's your weight?</h1>
+    <div class="w-full flex justify-center items-center my-4">
       <div
         class="h-14 w-24 flex items-center justify-center px-2 bg-secondary text-black mx-4 rounded-xl font-boldHeadline"
       >
         <input
           type="text"
-          class="bg-transparent w-full font-boldHeadline h-full text-3xl text-black pl-2"
-          placeholder="Ft"
-          v-model="foot"
-          @change="updateUserHeightFt(foot)"
-        />
-      </div>
-      <div
-        class="h-14 w-24 flex items-center justify-center px-2 bg-secondary text-black mx-4 rounded-xl font-boldHeadline"
-      >
-        <input
-          type="text"
-          class="bg-transparent w-full font-boldHeadline h-full text-3xl text-black pl-2"
-          placeholder="Inch"
-          v-model="inches"
-          @change="updateUserHeightInches(inches)"
+          class="bg-transparent w-full font-boldHeadline h-full text-2xl text-black pl-2"
+          v-model="weight"
+          @change="updateUserWeight(weight)"
         />
       </div>
     </div>

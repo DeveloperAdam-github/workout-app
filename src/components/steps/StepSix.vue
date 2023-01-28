@@ -18,6 +18,8 @@ const progressStep = () => {
   emit('stepProgress', 7);
   globalStore.userDetailsEntered = true;
   globalStore.showNav = true;
+
+  addUserDetailsToDatabase();
 };
 
 const updateUserGoals = (value) => {
@@ -30,6 +32,10 @@ const updateUserGoals = (value) => {
   } else {
     store.userDetails.goals.push(value);
   }
+};
+
+const addUserDetailsToDatabase = () => {
+  store.addUserDetailsToDatabase();
 };
 </script>
 

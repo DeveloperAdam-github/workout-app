@@ -4,7 +4,7 @@ import { defineStore } from 'pinia';
 export const usePopularWorkoutStore = defineStore('popularWorkouts', () => {
   const popularWorkouts = ref([
     {
-      name: 'Lower Body Workout',
+      workout_name: 'Lower Body Workout',
       exercises: [
         {
           name: 'Barbell Squats',
@@ -44,7 +44,7 @@ export const usePopularWorkoutStore = defineStore('popularWorkouts', () => {
       tags: ['lower', 'legs', 'squats'],
     },
     {
-      name: 'Full Body Workout HARD',
+      workout_name: 'Full Body Workout HARD',
       exercises: [
         {
           name: 'Squats',
@@ -105,7 +105,7 @@ export const usePopularWorkoutStore = defineStore('popularWorkouts', () => {
       tags: ['full body'],
     },
     {
-      name: 'Lower Body Workout',
+      workout_name: 'Lower Body Workout',
       exercises: [
         {
           name: 'Barbell Squats',
@@ -164,7 +164,7 @@ export const usePopularWorkoutStore = defineStore('popularWorkouts', () => {
       tags: ['lower', 'legs', 'squats'],
     },
     {
-      name: 'Upper Body Workout',
+      workout_name: 'Upper Body Workout',
       exercises: [
         {
           name: 'Barbell Bench Press',
@@ -213,7 +213,7 @@ export const usePopularWorkoutStore = defineStore('popularWorkouts', () => {
       tags: ['chest', 'upper', 'bench'],
     },
     {
-      name: 'Full Body Workout',
+      workout_name: 'Full Body Workout',
       exercises: [
         {
           name: 'Squats',

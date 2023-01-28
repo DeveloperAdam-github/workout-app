@@ -5,6 +5,7 @@ import StatsView from '../views/StatsView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import NewWorkoutView from '../views/NewWorkoutView.vue';
 import AddNewWorkout from '../views/AddNewWorkout.vue';
+import PreBuiltWorkout from '../views/PreBuiltWorkout.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/new-workout',
       name: 'newWorkout',
       component: NewWorkoutView,
+    },
+    {
+      path: '/workout-view',
+      name: 'workoutView',
+      component: PreBuiltWorkout,
     },
   ],
 });

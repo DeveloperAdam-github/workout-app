@@ -5,7 +5,7 @@ import { useGlobalStore } from './global';
 
 export const useUserStore = defineStore('user', () => {
   const globalStore = useGlobalStore();
-  const user = ref(localStorage.getItem('user') ?? null);
+  const user = ref(JSON.parse(localStorage.getItem('user')) ?? null);
   const userSession = ref(localStorage.getItem('userSession') ?? null);
   const emailHold = ref('');
   const userHold = ref(false);
@@ -15,6 +15,7 @@ export const useUserStore = defineStore('user', () => {
     age: '',
     metric: '',
     height: { foot: '', inches: '' },
+    weight: '',
     goals: [],
   });
 
@@ -33,7 +34,6 @@ export const useUserStore = defineStore('user', () => {
   }
 
   async function verifyUserWithEmailCode(token) {
-    console.log(token, 'wot token');
     try {
       loading.value = true;
       const { data, error } = await supabase.auth.verifyOtp({
@@ -49,11 +49,7 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('userSession', JSON.stringify(data.session));
 
-        setTimeout(() => {
-          globalStore.showPopUpForDetail = true;
-
-          console.log(globalStore, 'whats global store');
-        }, 2000);
+        getUserDetailsFromDatabase();
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -82,6 +78,43 @@ export const useUserStore = defineStore('user', () => {
     }
   };
 
+  const addUserDetailsToDatabase = async () => {
+    await supabase
+      .from('users')
+      .insert({
+        id: user.value.id,
+        email: user.value.email,
+        gender: userDetails.value.gender,
+        age: userDetails.value.age,
+        metric: userDetails.value.metric,
+        height: userDetails.value.height,
+        weight: userDetails.value.weight,
+        goals: userDetails.value.goals,
+      })
+      .select()
+      .then((response) => {
+        console.log(response);
+      });
+  };
+
+  const getUserDetailsFromDatabase = async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`*`)
+      .eq('id', user.value.id);
+
+    console.log(data, 'does anything come back here?');
+
+    if (!data) {
+      setTimeout(() => {
+        globalStore.userDetailsEntered = false;
+        globalStore.showPopUpForDetail = true;
+      }, 2000);
+    } else {
+      globalStore.showNav = true;
+    }
+  };
+
   return {
     user,
     userDetails,
@@ -90,5 +123,7 @@ export const useUserStore = defineStore('user', () => {
     verifyUserWithEmailCode,
     userHold,
     emailHold,
+    addUserDetailsToDatabase,
+    getUserDetailsFromDatabase,
   };
 });
