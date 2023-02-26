@@ -8,6 +8,8 @@ import LastWorkouts from '../components/LastWorkouts.vue';
 import { useRouter } from 'vue-router';
 import supabase from '../supabase';
 import { useUserStore } from '../stores/user';
+import { Plugins } from '@capacitor/core';
+const { DistancePlugin } = Plugins;
 
 const store = useWorkoutStore();
 const userStore = useUserStore();
@@ -15,12 +17,55 @@ const user = ref(userStore.user);
 const router = useRouter();
 const timerStarted = ref(false);
 const previousWorkouts = ref(store.lastTenWorkouts);
+const previousWorkoutsFromApple = ref(store.lastTenWorkoutsFromApple);
+const previousCombinedWorkouts = ref(store.combinedLastTwentyWorkouts);
 const savedRoutines = ref([]);
 const timer = ref({
   time: null,
   minutes: 0,
   seconds: 0,
 });
+
+const showMeALL = () => {
+  alert(JSON.stringify(previousWorkoutsFromApple.value));
+};
+
+// if (typeof window.capacitor !== 'undefined') {
+const getWorkoutsFromApple = async () => {
+  let result = await DistancePlugin.authorize();
+  // let data = await DistancePlugin.getDistance({ startDate: '2022/07/01' });
+  let workoutsFromIOS = await DistancePlugin.getWorkouts();
+
+  previousWorkoutsFromApple.value = workoutsFromIOS;
+
+  // workoutsFromIOS.workouts.forEach((workout) => {
+  //   previousCombinedWorkouts.value.push({
+  //     workout_name: workout.workoutType,
+  //     created_at: workout.startDate,
+  //     fromApple: true,
+  //   });
+  // });
+
+  workoutsFromIOS.workouts.forEach((workout) => {
+    let workoutExists = previousCombinedWorkouts.value.find(
+      (existingWorkout) => {
+        return existingWorkout.id === workout.id;
+      }
+    );
+
+    if (!workoutExists) {
+      previousCombinedWorkouts.value.push({
+        workout_name: workout.workoutType,
+        created_at: workout.startDate,
+        fromApple: true,
+        id: workout.id,
+      });
+    }
+  });
+
+  // previousCombinedWorkouts.value.push(previousWorkoutsFromApple.value);
+};
+// }
 
 const getRoutines = async () => {
   const { data, error } = await supabase
@@ -40,15 +85,35 @@ const getPreviousWorkouts = async () => {
     .select(`*, exercises(*, sets(*))`)
     .eq('user', user.value.id)
     .eq('is_routine', false)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(10);
 
   previousWorkouts.value = data;
-  console.log('retrieving', previousWorkouts.value);
+
+  data.forEach((workout) => {
+    let workoutExists = previousCombinedWorkouts.value.find(
+      (existingWorkout) => {
+        return existingWorkout.id === workout.id;
+      }
+    );
+
+    if (!workoutExists) {
+      previousCombinedWorkouts.value.push(workout);
+    }
+  });
+
+  // data.forEach((workout) => {
+  //   previousCombinedWorkouts.value.push(workout);
+  // });
 };
 
 onMounted(() => {
   getPreviousWorkouts();
   getRoutines();
+
+  // if (typeof window.capacitor !== 'undefined') {
+  getWorkoutsFromApple();
+  // }
 });
 
 const startTimer = () => {
@@ -69,6 +134,12 @@ const formattedMinutes = computed(() => {
 
 const formattedSeconds = computed(() => {
   return timer.value.seconds.toString().padStart(2, '0');
+});
+
+const sortedList = computed(() => {
+  return previousCombinedWorkouts.value.sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  );
 });
 
 const pauseTimer = () => {
@@ -261,10 +332,11 @@ const completeSet = (exerciseName, index) => {
           Start a new workout
         </button>
       </div>
-      <p class="my-4">Last workouts..</p>
+      <p class="my-4" @click="showMeALL">Last workouts..</p>
       <div class="w-full h-[40%] carousel-vertical pb-12">
+        <!-- v-for="(workout, index) in previousWorkouts" -->
         <LastWorkouts
-          v-for="(workout, index) in previousWorkouts"
+          v-for="(workout, index) in sortedList"
           :workout="workout"
           :key="index"
         />

@@ -307,7 +307,12 @@ const startThisWorkoutAndResetSets = () => {
         <div
           class="rounded-xl bg-secondary/70 h-8 px-2 absolute -bottom-3 right-4 text-xxs flex items-center justify-center text-black"
         >
-          <p class="font-boldHeadline">105 kcal</p>
+          <p class="font-boldHeadline" v-if="loadedWorkout.apple_workouts">
+            {{
+              Number(loadedWorkout.apple_workouts[0].calories).toFixed(0)
+            }}
+            kcals
+          </p>
         </div>
       </div>
     </div>

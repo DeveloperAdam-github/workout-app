@@ -5,6 +5,8 @@ import supabase from '../supabase';
 export const useWorkoutStore = defineStore('workout', () => {
   const workout = ref(null);
   const lastTenWorkouts = ref(null);
+  const lastTenWorkoutsFromApple = ref(null);
+  const combinedLastTwentyWorkouts = ref([]);
   const chosenWorkout = ref(null);
   const loadPreBuiltWorkout = ref(false);
   const workoutSet = ref(false);
@@ -55,11 +57,13 @@ export const useWorkoutStore = defineStore('workout', () => {
 
     const { data, error } = await supabase
       .from('workouts')
-      .select(`*, exercises(*, sets(*))`)
+      .select(
+        `*, exercises(*, sets(*)), apple_workouts!apple_workouts_workout_fkey(*)`
+      )
       .eq('id', id);
 
-    loadedWorkoutFromID.value = data[0];
     console.log('retrieving', data[0]);
+    loadedWorkoutFromID.value = data[0];
   };
 
   const setRoutineBackToTemplate = () => {
@@ -90,6 +94,8 @@ export const useWorkoutStore = defineStore('workout', () => {
     newWorkout,
     freshWorkout,
     lastTenWorkouts,
+    lastTenWorkoutsFromApple,
+    combinedLastTwentyWorkouts,
     getWorkoutFromDatabaseWithId,
     loadedWorkoutFromID,
     loadPreBuiltWorkout,

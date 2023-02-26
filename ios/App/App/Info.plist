@@ -10,6 +10,18 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires camera access to take profile picture.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires camera/photo access to take profile picture.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires camera/photo access to take profile picture.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>This app requires access to your Contacts to function properly.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Read Health Data</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Read Health Data</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

@@ -8,6 +8,9 @@ import { useUserStore } from '../stores/user';
 import { useRouter } from 'vue-router';
 import { useGlobalStore } from '../stores/global';
 
+import { Plugins } from '@capacitor/core';
+const { DistancePlugin } = Plugins;
+
 const store = useWorkoutStore();
 const userStore = useUserStore();
 const globalStore = useGlobalStore();
@@ -19,8 +22,11 @@ const router = useRouter();
 const workoutId = ref(null);
 const exercisesArray = ref([]);
 const builtSetArray = ref([]);
+const lastThreeWorkoutsForLinking = ref([]);
+const chosenWorkoutToLink = ref({});
 
 const openModal = ref();
+const openAppleModal = ref();
 
 const workoutName = ref('Default Workout');
 
@@ -39,6 +45,32 @@ onMounted(() => {
 onBeforeUnmount(() => {
   globalStore.showNav = true;
 });
+
+const getLastThreeWorkoutsFromApple = async () => {
+  let result = await DistancePlugin.authorize();
+  let workoutsFromIOS = await DistancePlugin.getLast3Workouts();
+
+  lastThreeWorkoutsForLinking.value = workoutsFromIOS.workouts;
+};
+
+const linkChosenAppleWorkoutToWorkout = async () => {
+  console.log(
+    chosenWorkoutToLink.value,
+    'can we see the chosen workout to link?'
+  );
+
+  // alert(JSON.stringify(chosenWorkoutToLink.value));
+
+  await supabase
+    .from('apple_workouts')
+    .insert({
+      calories: chosenWorkoutToLink.value.value.calories,
+      workout: null,
+    })
+    .then(() => {
+      openModalForSaving();
+    });
+};
 
 const startTimer = () => {
   timerStarted.value = true;
@@ -145,6 +177,10 @@ const openModalForSaving = () => {
   openModal.value.click();
 };
 
+const openAddToAppleModal = () => {
+  openAppleModal.value.click();
+};
+
 const finishWorkout = async () => {
   await supabase
     .from('workouts')
@@ -229,6 +265,73 @@ const uploadSets = async (id) => {
     <label for="my-modal" class="btn hidden" id="modal-button" ref="openModal"
       >open modal</label
     >
+    <label
+      for="apple-modal"
+      class="btn hidden"
+      id="modal-button"
+      ref="openAppleModal"
+      >open modal</label
+    >
+    <!-- APPLE MODAL -->
+    <input type="checkbox" id="apple-modal" class="modal-toggle" />
+    <div class="modal bg-black/60 flex flex-col items-center justify-center">
+      <div class="modal-box bg-primary">
+        <h3 class="font-bold text-lg">
+          Want to get calories from an apple fitness workout?
+        </h3>
+        <div
+          class="w-full flex flex-col p-2"
+          v-if="lastThreeWorkoutsForLinking"
+        >
+          <table class="w-full" v-if="lastThreeWorkoutsForLinking !== []">
+            <tr
+              v-for="(workout, index) in lastThreeWorkoutsForLinking"
+              :key="index"
+              class="h-10"
+            >
+              <td
+                @click="chosenWorkoutToLink.value = workout"
+                :class="
+                  workout === chosenWorkoutToLink.value
+                    ? 'bg-secondary text-black'
+                    : ''
+                "
+              >
+                {{ workout.workoutType }} <small>{{ workout.calories }}</small>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="modal-action w-full flex justify-center">
+          <button
+            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
+            @click="getLastThreeWorkoutsFromApple"
+            v-if="
+              lastThreeWorkoutsForLinking &&
+              lastThreeWorkoutsForLinking.length <= 0
+            "
+          >
+            Yes
+          </button>
+          <label
+            for="apple-modal"
+            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
+            @click="openModalForSaving"
+          >
+            No
+          </label>
+          <label
+            for="apple-modal"
+            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
+            @click="linkChosenAppleWorkoutToWorkout"
+            v-if="lastThreeWorkoutsForLinking.length > 0"
+          >
+            Link workout
+          </label>
+        </div>
+      </div>
+    </div>
+    <!-- APPLE MODAL -->
 
     <!-- Put this part before </body> tag -->
     <input type="checkbox" id="my-modal" class="modal-toggle" />
@@ -260,6 +363,14 @@ const uploadSets = async (id) => {
       >
         <div class="">
           <h1 class="text-lg font-boldHeadline">Fresh Workout</h1>
+        </div>
+        <!-- add to an apple workout button -->
+        <div @click="openAddToAppleModal" class="absolute bottom-2 right-2">
+          <img
+            class="h-8 w-8"
+            src="../assets/images/apple_fitness.png"
+            alt=""
+          />
         </div>
         <div
           class="absolute h-14 w-2/4 rounded-xl bg-transparent/70 flex -bottom-6 m-auto left-0 right-0 text-xs items-center p-1"
@@ -393,7 +504,7 @@ const uploadSets = async (id) => {
         <div class="w-full flex items-center justify-center">
           <button
             class="w-full p-1 my-2 rounded-lg bg-blue-600 text-sm text-white"
-            @click="openModalForSaving"
+            @click="openAddToAppleModal"
           >
             Finish Workout
           </button>
