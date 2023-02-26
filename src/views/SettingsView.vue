@@ -125,26 +125,6 @@ const addNameToUserDetails = async () => {
     });
 };
 
-const createDynamicIslandScene = () => {
-  // Create a new view controller with a simple label
-  const label = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 100));
-  label.text = "Hello, Dynamic Island!";
-  label.center = CGPoint(x: 100, y: 100);
-  const viewController = UIViewController();
-  viewController.view.addSubview(label);
-
-  // Create a new scene configuration and request activation of the scene session
-  const sceneConfiguration = UISceneConfiguration('com.yourcompany.yourapp.DynamicIslandScene', 'Dynamic Island', 'UIWindowSceneSessionRoleApplication');
-  const dynamicIslandScene = UIApplication.sharedApplication().requestSceneSessionActivation(nil, sceneConfiguration, nil, (error) => {
-    console.error('Error creating dynamic island scene:', error);
-  });
-
-  // Set the view controller's view as the root view of the scene's window
-  dynamicIslandScene.window.rootViewController = viewController;
-};
-
-App.addListener('resume', createDynamicIslandScene);
-
 onMounted(() => {
   getDailySteps();
   getTotalWorkoutCount();
