@@ -6,6 +6,8 @@ import SettingsView from '../views/SettingsView.vue';
 import NewWorkoutView from '../views/NewWorkoutView.vue';
 import AddNewWorkout from '../views/AddNewWorkout.vue';
 import PreBuiltWorkout from '../views/PreBuiltWorkout.vue';
+import SuccessView from '../views/SuccessView.vue';
+import SignupSuccessView from '../views/SignupSuccessView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +47,17 @@ const router = createRouter({
       name: 'workoutView',
       component: PreBuiltWorkout,
     },
+    //  just for testing shit for now
+    {
+      path: '/success/:id',
+      name: 'success',
+      component: SuccessView
+    },
+    {
+      path: '/signup-success',
+      name: 'signup-sucess',
+      component: SignupSuccessView
+    }
   ],
 });
 

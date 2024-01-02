@@ -26,10 +26,12 @@ const timer = ref({
   seconds: 0,
 });
 
+console.log('hello ')
 const showMeALL = () => {
   alert(JSON.stringify(previousWorkoutsFromApple.value));
 };
 
+// Need to add check in here to see if app/capacitor or browser to stop browser errors.
 // if (typeof window.capacitor !== 'undefined') {
 const getWorkoutsFromApple = async () => {
   let result = await DistancePlugin.authorize();
@@ -38,6 +40,9 @@ const getWorkoutsFromApple = async () => {
 
   previousWorkoutsFromApple.value = workoutsFromIOS;
 
+  // This is getting the workouts from the HealthKit / iOS
+  // Do we want to get some from anroid too?
+  // -------------------------------------
   // workoutsFromIOS.workouts.forEach((workout) => {
   //   previousCombinedWorkouts.value.push({
   //     workout_name: workout.workoutType,
@@ -76,7 +81,7 @@ const getRoutines = async () => {
     .order('created_at', { ascending: false });
 
   savedRoutines.value = data;
-  console.log('retrieving saved routines', savedRoutines.value);
+  console.log(savedRoutines.value, 'here?');
 };
 
 const getPreviousWorkouts = async () => {
@@ -303,43 +308,27 @@ const completeSet = (exerciseName, index) => {
     <div class="w-full flex h-full flex-col p-4">
       <p>Your routines</p>
       <div class="carousel w-full py-4">
-        <YourRoutine
-          v-for="(routine, index) in savedRoutines"
-          :key="index"
-          :routine="routine"
-        />
+        <YourRoutine v-for="(routine, index) in savedRoutines" :key="index" :routine="routine" />
         <div
-          class="h-40 p-4 w-3/4 text-black flex-col bg-white shadow-md rounded-lg carousel-item mr-4 flex items-center justify-center"
-        >
-          <RouterLink
-            to="/add-workout"
-            class="h-full w-full flex items-center justify-center flex-col"
-          >
+          class="h-40 p-4 w-3/4 text-black flex-col bg-white shadow-md rounded-lg carousel-item mr-4 flex items-center justify-center">
+          <RouterLink to="/add-workout" class="h-full w-full flex items-center justify-center flex-col">
             <p>Add New Routine</p>
-            <div
-              class="h-10 w-10 mt-4 rounded-full border border-gray-500 flex items-center justify-center"
-            >
+            <div class="h-10 w-10 mt-4 rounded-full border border-gray-500 flex items-center justify-center">
               <i class="fa-solid fa-plus text-gray-500"></i>
             </div>
           </RouterLink>
         </div>
       </div>
       <div class="w-full py-4 flex">
-        <button
-          @click="newWorkoutStarted"
-          class="p-2 py-3 rounded-lg bg-secondary text-black w-full shadow-md shadow-black/50"
-        >
+        <button @click="newWorkoutStarted"
+          class="p-2 py-3 rounded-lg bg-secondary text-black w-full shadow-md shadow-black/50">
           Start a new workout
         </button>
       </div>
       <p class="my-4" @click="showMeALL">Last workouts..</p>
       <div class="w-full h-[40%] carousel-vertical pb-12">
         <!-- v-for="(workout, index) in previousWorkouts" -->
-        <LastWorkouts
-          v-for="(workout, index) in sortedList"
-          :workout="workout"
-          :key="index"
-        />
+        <LastWorkouts v-for="(workout, index) in sortedList" :workout="workout" :key="index" />
       </div>
     </div>
   </main>
@@ -349,6 +338,7 @@ const completeSet = (exerciseName, index) => {
 td {
   text-align: center;
 }
+
 /* input {
   text-align: center;
 } */

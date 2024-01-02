@@ -12,8 +12,11 @@
     "@capacitor/camera": "^4.1.4",
     "@capacitor/core": "^4.6.1",
     "@capacitor/ios": "^4.6.1",
+    "@paypal/paypal-js": "^7.0.3",
     "@supabase/supabase-js": "^2.2.3",
+    "@vue-stripe/vue-stripe": "^4.5.0",
     "autoprefixer": "^10",
+    "axios": "^1.6.1",
     "chart.js": "^3.9.1",
     "daisyui": "^2.46.0",
     "pinia": "^2.0.28",
@@ -27,6 +30,7 @@
   "devDependencies": {
     "@capacitor/cli": "^4.6.1",
     "@vitejs/plugin-vue": "^4.0.0",
+    "supabase": "^1.110.1",
     "vite": "^4.0.0",
     "vue-cli-plugin-tailwind": "~3.0.0"
   }

@@ -2,8 +2,10 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import supabase from '../supabase';
 import { useGlobalStore } from './global';
+import { useRouter } from 'vue-router'
 
 export const useUserStore = defineStore('user', () => {
+  const router = useRouter();
   const globalStore = useGlobalStore();
   const user = ref(JSON.parse(localStorage.getItem('user')) ?? null);
   const userSession = ref(localStorage.getItem('userSession') ?? null);
@@ -17,20 +19,18 @@ export const useUserStore = defineStore('user', () => {
     height: { foot: '', inches: '' },
     weight: '',
     goals: [],
+    account_type: 'default',
   });
 
   async function signInWithEmail(email) {
-    console.log(email, 'whta the email here?');
     const { data, error } = await supabase.auth.signInWithOtp({
       email: email,
       type: 'magiclink',
     });
-    alert('Check your email for your 6 digit code');
+    alert('check your email for a 6 digit code');
     emailHold.value = email;
     userHold.value = true;
     globalStore.showNav = false;
-
-    console.log(data, 'show me data?', error, 'show me error?');
   }
 
   async function verifyUserWithEmailCode(token) {
@@ -61,21 +61,43 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const handleLogin = async (email) => {
-    console.log(email, 'whats email passed in?');
+    console.log(email)
     try {
       loading.value = true;
       const { error } = await supabase.auth.signInWithOtp({
         email: email,
       });
       if (error) throw error;
+      // do we want to replace this for a toast?
       alert('Check your email for the login link!');
     } catch (error) {
       if (error instanceof Error) {
         alert(error.message);
+        // we need to check the message here?
       }
     } finally {
       loading.value = false;
     }
+  };
+
+  const primeUserDetailsToDatabase = async () => {
+    await supabase
+      .from('users')
+      .insert({
+        id: user.value.id,
+        email: user.value.email,
+        gender: null,
+        age: null,
+        metric: null,
+        height: null,
+        weight: null,
+        goals: null,
+        account_type: 'default'
+      })
+      .select()
+      .then((response) => {
+        console.log(response);
+      });
   };
 
   const addUserDetailsToDatabase = async () => {
@@ -90,6 +112,7 @@ export const useUserStore = defineStore('user', () => {
         height: userDetails.value.height,
         weight: userDetails.value.weight,
         goals: userDetails.value.goals,
+        account_type: 'default'
       })
       .select()
       .then((response) => {
@@ -103,15 +126,40 @@ export const useUserStore = defineStore('user', () => {
       .select(`*`)
       .eq('id', user.value.id);
 
+    userDetails.value = data[0];
+
     console.log(data, 'does anything come back here?');
 
-    if (!data) {
+    if (data === [] || data.length === 0) {
+      // primeUserDetailsToDatabase();
       setTimeout(() => {
         globalStore.userDetailsEntered = false;
         globalStore.showPopUpForDetail = true;
       }, 2000);
     } else {
       globalStore.showNav = true;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Supabase sign out
+      await supabase.auth.signOut();
+
+      // Clear localStorage items related to user session
+      localStorage.removeItem('userSession');
+      localStorage.removeItem('user');
+
+      // Reset user state
+      user.value = null;
+      userSession.value = null;
+
+      router.push('/')
+
+      // Redirect or perform other actions as needed
+      console.log('Logged out successfully');
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
@@ -125,5 +173,6 @@ export const useUserStore = defineStore('user', () => {
     emailHold,
     addUserDetailsToDatabase,
     getUserDetailsFromDatabase,
+    logout
   };
 });

@@ -4,6 +4,14 @@ import womanSquatting from '../assets/images/womanSquatting.jpg';
 import WorkoutsPerWeek from '../components/WorkoutsPerWeek.vue';
 import WeightTrackGraph from '../components/WeightTrackGraph.vue';
 import DatePicker from '../components/DatePicker.vue';
+import { useWorkoutStore } from '../stores/workout';
+import { onMounted } from 'vue'
+
+const store = useWorkoutStore()
+
+onMounted(() => {
+  store.getAllPreviousWorkouts()
+})
 </script>
 
 <template>
@@ -12,14 +20,10 @@ import DatePicker from '../components/DatePicker.vue';
     <div class="w-full flex flex-col p-4">
       <p>Dashboard</p>
       <div class="w-full carousel mt-4 py-4">
-        <div
-          class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4"
-        >
+        <div class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4">
           <WorkoutsPerWeek />
         </div>
-        <div
-          class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4"
-        >
+        <div class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4">
           <WeightTrackGraph />
         </div>
       </div>
@@ -33,6 +37,7 @@ import DatePicker from '../components/DatePicker.vue';
 td {
   text-align: center;
 }
+
 input {
   text-align: center;
 }

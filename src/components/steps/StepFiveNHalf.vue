@@ -31,23 +31,15 @@ const updateUserHeightInches = (value) => {
     <h1 class="text-xl font-boldHeadline">What's your weight?</h1>
     <div class="w-full flex justify-center items-center my-4">
       <div
-        class="h-14 w-24 flex items-center justify-center px-2 bg-secondary text-black mx-4 rounded-xl font-boldHeadline"
-      >
-        <input
-          type="text"
-          class="bg-transparent w-full font-boldHeadline h-full text-2xl text-black pl-2"
-          v-model="weight"
-          @change="updateUserWeight(weight)"
-        />
+        class="h-14 w-24 flex items-center justify-center px-2 bg-secondary text-black mx-4 rounded-xl font-boldHeadline">
+        <input type="text" class="bg-transparent w-full font-boldHeadline h-full text-2xl text-black pl-2"
+          v-model="weight" @change="updateUserWeight(weight)" />
       </div>
     </div>
     <div class="progress w-1/3 h-2 my-5 rounded-full bg-secondary">
       <div class="bg-black w-5/6 h-full rounded-full"></div>
     </div>
-    <button
-      @click="progressStep"
-      class="h-12 rounded-full w-full bg-primary text-white"
-    >
+    <button @click="progressStep" class="h-12 rounded-full w-full bg-primary text-white">
       Next Step
     </button>
   </div>
