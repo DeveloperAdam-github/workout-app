@@ -22,6 +22,7 @@ module.exports = {
       },
       transitionProperty: {
         'height': 'height',
+        'maxHeight': 'maxHeight',
         'spacing': 'margin, padding',
       }
     },

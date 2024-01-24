@@ -5,17 +5,20 @@
       v-model="workout.workout_name" />
 
     <div class="w-full flex flex-col mt-4">
-      <div class="flex flex-col w-full">
+      <div class="flex flex-col w-full mb-5">
         <div class="w-full mb-2 flex items-center flex-col overflow-hidden" v-for="(exercise, index) in exercises"
           :key="index" :class="selectedExercise === exercise.id ? 'max-h-fit' : 'max-h-10'">
-          <div class="w-full flex items-center">
-            <h2 class="text-xl w-full flex items-center justify-center text-center border border-black rounded-md py-1"
-              v-touch:swipe.left="removeExercise(exercise.id, index)" @click="selectExercise(exercise)"
-              :class="selectedExercise === exercise.id ? 'bg-secondary border-none' : 'bg-transparent'">{{ exercise.name
+          <div class="w-full flex items-center justify-between relative">
+            <h2 class="text-xl w-full flex items-center justify-center text-center  rounded-md py-1 transition-all"
+              @click="selectExercise(exercise)" v-touch:swipe.left="removeExercise(exercise.id, index)"
+              :class="selectedExercise === exercise.id && !exercise.startDelete ? 'bg-secondary ' : exercise.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
+              {{ exercise.name
               }}
             </h2>
-            <div v-if="exercise.startDelete === true">
-              <button class="bg-red-500 text-white h-8 w-8">X</button>
+            <div :class="exercise.startDelete === true ? 'translate-x-0' : 'translate-x-36'"
+              class="transition-all  transform absolute right-0">
+              <button class="bg-red-500 text-white h-8 w-8 rounded-md" @click="finalRemoveExercise(exercise.id,
+                index)">X</button>
             </div>
           </div>
           <div class="w-full mt-2" v-for="(set, index) in exercise.sets"
@@ -127,12 +130,33 @@ const removeSet = (excerciseId, index) => {
 };
 
 const removeExercise = (exercise, index) => {
+  return function () {
+    const foundExercise = exercises.value.find(
+      (ex) => ex.id === exercise
+    )
+
+    if (foundExercise.startDelete === true) {
+      //  remove from array
+      exercises.value.splice(index, 1);
+      foundExercise.startDelete = false;
+      return;
+    }
+    foundExercise.startDelete = true;
+  }
+}
+
+const finalRemoveExercise = (exercise, index) => {
   const foundExercise = exercises.value.find(
     (ex) => ex.id === exercise
   )
 
+  if (foundExercise.startDelete === true) {
+    //  remove from array
+    exercises.value.splice(index, 1);
+    foundExercise.startDelete = false;
+    return;
+  }
   foundExercise.startDelete = true;
-  console.log(exercise, index, 'lol');
 }
 
 const selectExercise = (exercise) => {
