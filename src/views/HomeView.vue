@@ -17,6 +17,7 @@ import TopBar from '../components/TopBar.vue';
 import man from '../assets/images/man.jpg';
 import BigWorkoutCard2 from '../components/BigWorkoutCard2.vue';
 import StepFiveNHalf from '../components/steps/StepFiveNHalf.vue';
+import supabase from '../supabase';
 
 const step = ref(1);
 const store = useUserStore();
@@ -30,10 +31,38 @@ const popularWorkoutStore = usePopularWorkoutStore();
 const workoutsShown = ref(false);
 const showLogin = ref(false);
 
+
 onMounted(() => {
   setTimeout(() => {
     showLogin.value = true;
   }, 800);
+
+  // if (!store.isConnectedToRealTimeDB) {
+  //   store.subscribeToChannel()
+  // }
+
+  // Subscribe to channels here on Mounted 
+
+  // NEED TO MAKE SURE WE HAVE THE USER ID LOADED HERE AT THIS POINT.
+
+  // LISTEN FOR THE INSERT AND THEN ADD IT TO "NEW MESSAGE" ARRAY AND DISPLAY THE ALERT + THE NEW MESSGE
+  // "eventType : "INSERT"  "new" : {"body":  etc}
+  // const channels = supabase.channel('custom-filter-channel')
+  //   .on(
+  //     'postgres_changes',
+  //     { event: '*', schema: 'public', table: 'messages', filter: `sent_to=eq.${user.id}` },
+  //     (payload) => {
+  //       console.log('Change received!', payload)
+  //       if (payload.eventType == 'INSERT') {
+  //         console.log('lol');
+  //         globalStore.newMessages.push(payload.new)
+  //         globalStore.showInstantAlert = true;
+  //       }
+  //     }
+  //   )
+  //   .subscribe()
+
+  // console.log('channels', channels);
 });
 
 const popularWorkouts = ref(popularWorkoutStore.popularWorkouts);
@@ -82,8 +111,8 @@ const toggleWorkoutList = () => {
       <div v-show="globalStore.showPopUpForDetail"
         class="absolute bg-white w-full z-20 rounded-tr-3xl rounded-tl-3xl p-4 flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ease-out"
         :class="globalStore.showPopUpForDetail
-            ? 'h-1/3 bottom-0 transition-all duration-700 ease-out'
-            : 'h-0 -bottom-10 opacity-0 transition-all duration-700 ease-out'
+          ? 'h-1/3 bottom-0 transition-all duration-700 ease-out'
+          : 'h-0 -bottom-10 opacity-0 transition-all duration-700 ease-out'
           ">
         <transition name="step" mode="out-in" v-show="step === 1">
           <StepOne @stepProgress="stepProgress" :step="step" :class="step !== 1 ? 'absolute' : ''" />

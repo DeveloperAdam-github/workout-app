@@ -8,11 +8,12 @@ export const useUserStore = defineStore('user', () => {
   const router = useRouter();
   const globalStore = useGlobalStore();
   const user = ref(JSON.parse(localStorage.getItem('user')) ?? null);
-  const userSession = ref(localStorage.getItem('userSession') ?? null);
+  const userSession = ref(JSON.parse(localStorage.getItem('userSession')) ?? null);
   const emailHold = ref('');
   const userHold = ref(false);
   const loading = ref(false);
-  const userDetails = ref({
+  const userDetails = ref(JSON.parse(
+    localStorage.getItem('userDetails')) ?? {
     gender: '',
     age: '',
     metric: '',
@@ -21,6 +22,21 @@ export const useUserStore = defineStore('user', () => {
     goals: [],
     account_type: 'default',
   });
+  const stripeAccountId = ref('');
+  const hasPrimeStripeAccount = ref(false);
+  const createdPlans = ref([]);
+  const isConnectedToRealTimeDB = ref(false)
+
+
+  // const userDetails = ref({
+  //   gender: '',
+  //   age: '',
+  //   metric: '',
+  //   height: { foot: '', inches: '' },
+  //   weight: '',
+  //   goals: [],
+  //   account_type: 'default',
+  // });
 
   async function signInWithEmail(email) {
     const { data, error } = await supabase.auth.signInWithOtp({
@@ -50,6 +66,8 @@ export const useUserStore = defineStore('user', () => {
         localStorage.setItem('userSession', JSON.stringify(data.session));
 
         getUserDetailsFromDatabase();
+        getPrimeDetailsFromDatabase();
+        subscribeToChannel();
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -126,20 +144,59 @@ export const useUserStore = defineStore('user', () => {
       .select(`*`)
       .eq('id', user.value.id);
 
-    userDetails.value = data[0];
 
     console.log(data, 'does anything come back here?');
 
-    if (data === [] || data.length === 0) {
+
+    if (data.length <= 0) {
+      console.log('are we here?');
       // primeUserDetailsToDatabase();
       setTimeout(() => {
         globalStore.userDetailsEntered = false;
         globalStore.showPopUpForDetail = true;
+        userDetails.value = {
+          gender: '',
+          age: '',
+          metric: '',
+          height: { foot: '', inches: '' },
+          weight: '',
+          goals: [],
+          account_type: 'default',
+        }
       }, 2000);
     } else {
       globalStore.showNav = true;
+      userDetails.value = data[0];
+      localStorage.setItem('userDetails', JSON.stringify(data[0]));
     }
   };
+
+  const getPrimeDetailsFromDatabase = async (userId) => {
+    console.log('clicking');
+    const { data, error } = await supabase
+      .from('prime_accounts')
+      .select('*')
+      .eq('user_id', user.value.id)
+
+    if (data[0]) {
+      hasPrimeStripeAccount.value = true;
+      stripeAccountId.value = data[0].account_id
+    } else {
+      hasPrimeStripeAccount.value = false;
+    }
+
+    console.log(data, 'the data');
+    console.log(error, 'error');
+  }
+
+  // const getCreatedPlansForUser = async (userId) => {
+  //   const { data, error } = await supabase
+  //     .from('created_plans')
+  //     .select('*')
+  //     .eq('user_id', user.value.id)
+
+  //   createdPlans.value = data;
+  // }
 
   const logout = async () => {
     try {
@@ -149,10 +206,12 @@ export const useUserStore = defineStore('user', () => {
       // Clear localStorage items related to user session
       localStorage.removeItem('userSession');
       localStorage.removeItem('user');
+      localStorage.removeItem('userDetails');
 
       // Reset user state
       user.value = null;
       userSession.value = null;
+      userDetails.value = null;
 
       router.push('/')
 
@@ -163,9 +222,48 @@ export const useUserStore = defineStore('user', () => {
     }
   };
 
+  const subscribeToChannel = () => {
+    console.log(user, 'the user here?');
+    const channels = supabase.channel('custom-filter-channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'messages', filter: `sent_to=eq.${user.value.id}` },
+        (payload) => {
+          console.log('Change received!', payload);
+          if (payload.eventType == 'INSERT') {
+            console.log('New message received');
+            globalStore.messages.push(payload.new);
+            globalStore.showInstantAlert = true;
+            globalStore.loadedMessage = payload.new
+          }
+        }
+      )
+      .subscribe();
+
+    isConnectedToRealTimeDB.value = true;
+    console.log('Subscribed to channels', channels);
+
+    // Handling connection closed
+    channels.on('CLOSED', () => {
+      console.log('Connection closed. Attempting to reconnect...');
+      reconnect();
+    });
+
+    return channels;
+  };
+
+  const reconnect = () => {
+    // Add a delay or exponential backoff logic here if necessary
+    setTimeout(() => {
+      subscribeToChannel();  // Try to resubscribe
+    }, 3000); // Wait 3 seconds before attempting to reconnect
+  };
+
+
   return {
     user,
     userDetails,
+    userSession,
     handleLogin,
     signInWithEmail,
     verifyUserWithEmailCode,
@@ -173,6 +271,13 @@ export const useUserStore = defineStore('user', () => {
     emailHold,
     addUserDetailsToDatabase,
     getUserDetailsFromDatabase,
+    getPrimeDetailsFromDatabase,
+    hasPrimeStripeAccount,
+    // getCreatedPlansForUser,
+    stripeAccountId,
+    createdPlans,
+    isConnectedToRealTimeDB,
+    subscribeToChannel,
     logout
   };
 });

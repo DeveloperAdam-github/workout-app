@@ -20,6 +20,10 @@ module.exports = {
       animation: {
         'ping-once': 'ping 1s linear',
       },
+      transitionProperty: {
+        'height': 'height',
+        'spacing': 'margin, padding',
+      }
     },
   },
   plugins: [require('daisyui')],

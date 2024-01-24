@@ -2,13 +2,18 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import supabase from '../supabase';
 import { useGlobalStore } from './global';
+import { useUserStore } from './user';
 
 export const usePrimeStore = defineStore('prime', () => {
   const globalStore = useGlobalStore();
+  const userStore = useUserStore()
   const showPrimeUserSettings = ref(true);
   const showPaymentModal = ref(false);
   const showPlanModal = ref(false);
   const showSubscriptionModal = ref(false)
+  const showStripeAccountModal = ref(false);
+  const createdPlans = ref([]);
+  const clients = ref([]);
 
   async function toggleShowPrimeUserSettings() {
     console.log('toggling');
@@ -42,6 +47,16 @@ export const usePrimeStore = defineStore('prime', () => {
       }
     }, 500);
   }
+
+  const getCreatedPlansForUser = async (userId) => {
+    const { data, error } = await supabase
+      .from('created_plans')
+      .select('*')
+      .eq('user_id', userStore.user.id)
+
+    createdPlans.value = data;
+  }
+
 
   async function subscribeToPrimeAccount() {
     // Sign up for Paypal / Scribe reoccuring subscription
@@ -87,6 +102,10 @@ export const usePrimeStore = defineStore('prime', () => {
     showSubscriptionModal.value = !showSubscriptionModal.value;
   };
 
+  const toggleStripeAccountCreationModal = () => {
+    showStripeAccountModal.value = !showStripeAccountModal.value;
+  }
+
   return {
     showPrimeUserSettings,
     toggleShowPrimeUserSettings,
@@ -98,6 +117,11 @@ export const usePrimeStore = defineStore('prime', () => {
     toggleShowPlanModal,
     signUpToStripe,
     toggleSubscriptionModal,
-    showSubscriptionModal
+    showSubscriptionModal,
+    showStripeAccountModal,
+    toggleStripeAccountCreationModal,
+    getCreatedPlansForUser,
+    createdPlans,
+    clients,
   };
 });

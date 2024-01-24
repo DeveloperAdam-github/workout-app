@@ -262,16 +262,8 @@ const uploadSets = async (id) => {
   <!-- NEW WORKOUT VIEW -->
   <main class="text-white h-full w-full bg-primary flex flex-col relative">
     <TopBar :title="'Workout'" />
-    <label for="my-modal" class="btn hidden" id="modal-button" ref="openModal"
-      >open modal</label
-    >
-    <label
-      for="apple-modal"
-      class="btn hidden"
-      id="modal-button"
-      ref="openAppleModal"
-      >open modal</label
-    >
+    <label for="my-modal" class="btn hidden" id="modal-button" ref="openModal">open modal</label>
+    <label for="apple-modal" class="btn hidden" id="modal-button" ref="openAppleModal">open modal</label>
     <!-- APPLE MODAL -->
     <input type="checkbox" id="apple-modal" class="modal-toggle" />
     <div class="modal bg-black/60 flex flex-col items-center justify-center">
@@ -279,53 +271,29 @@ const uploadSets = async (id) => {
         <h3 class="font-bold text-lg">
           Want to get calories from an apple fitness workout?
         </h3>
-        <div
-          class="w-full flex flex-col p-2"
-          v-if="lastThreeWorkoutsForLinking"
-        >
-          <table class="w-full" v-if="lastThreeWorkoutsForLinking !== []">
-            <tr
-              v-for="(workout, index) in lastThreeWorkoutsForLinking"
-              :key="index"
-              class="h-10"
-            >
-              <td
-                @click="chosenWorkoutToLink.value = workout"
-                :class="
-                  workout === chosenWorkoutToLink.value
-                    ? 'bg-secondary text-black'
-                    : ''
-                "
-              >
+        <div class="w-full flex flex-col p-2" v-if="lastThreeWorkoutsForLinking">
+          <table class="w-full" v-if="lastThreeWorkoutsForLinking">
+            <tr v-for="(workout, index) in lastThreeWorkoutsForLinking" :key="index" class="h-10">
+              <td @click="chosenWorkoutToLink.value = workout" :class="workout === chosenWorkoutToLink.value
+                  ? 'bg-secondary text-black'
+                  : ''
+                ">
                 {{ workout.workoutType }} <small>{{ workout.calories }}</small>
               </td>
             </tr>
           </table>
         </div>
         <div class="modal-action w-full flex justify-center">
-          <button
-            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
-            @click="getLastThreeWorkoutsFromApple"
-            v-if="
-              lastThreeWorkoutsForLinking &&
-              lastThreeWorkoutsForLinking.length <= 0
-            "
-          >
+          <button class="btn bg-secondary text-black px-6 py-1 rounded-lg" @click="getLastThreeWorkoutsFromApple" v-if="lastThreeWorkoutsForLinking &&
+            lastThreeWorkoutsForLinking.length <= 0
+            ">
             Yes
           </button>
-          <label
-            for="apple-modal"
-            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
-            @click="openModalForSaving"
-          >
+          <label for="apple-modal" class="btn bg-secondary text-black px-6 py-1 rounded-lg" @click="openModalForSaving">
             No
           </label>
-          <label
-            for="apple-modal"
-            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
-            @click="linkChosenAppleWorkoutToWorkout"
-            v-if="lastThreeWorkoutsForLinking.length > 0"
-          >
+          <label for="apple-modal" class="btn bg-secondary text-black px-6 py-1 rounded-lg"
+            @click="linkChosenAppleWorkoutToWorkout" v-if="lastThreeWorkoutsForLinking.length > 0">
             Link workout
           </label>
         </div>
@@ -338,58 +306,36 @@ const uploadSets = async (id) => {
     <div class="modal bg-black/60 flex flex-col items-center justify-center">
       <div class="modal-box bg-primary">
         <h3 class="font-bold text-lg">Name your workout ⬇️</h3>
-        <input
-          class="bg-transparent p-1 border-b-2 border-secondary rounded-none text-left w-full my-4"
-          v-model="workoutName"
-          placeholder="Bench Day..."
-        />
+        <input class="bg-transparent p-1 border-b-2 border-secondary rounded-none text-left w-full my-4"
+          v-model="workoutName" placeholder="Bench Day..." />
         <div class="modal-action w-full flex justify-center">
-          <label
-            for="my-modal"
-            class="btn bg-secondary text-black px-6 py-1 rounded-lg"
-            @click="finishWorkout"
-          >
+          <label for="my-modal" class="btn bg-secondary text-black px-6 py-1 rounded-lg" @click="finishWorkout">
             Save
           </label>
         </div>
       </div>
     </div>
     <div class="w-full flex flex-col p-4">
-      <div
-        class="h-36 w-full rounded-xl bg-cover bg-center relative flex items-center justify-center"
-        :style="{
-          'background-image': `linear-gradient(to bottom, rgba(1,1,1,0.75), rgba(255,255,255,0.000001)), url(${gym})`,
-        }"
-      >
+      <div class="h-36 w-full rounded-xl bg-cover bg-center relative flex items-center justify-center" :style="{
+        'background-image': `linear-gradient(to bottom, rgba(1,1,1,0.75), rgba(255,255,255,0.000001)), url(${gym})`,
+      }">
         <div class="">
           <h1 class="text-lg font-boldHeadline">Fresh Workout</h1>
         </div>
         <!-- add to an apple workout button -->
         <div @click="openAddToAppleModal" class="absolute bottom-2 right-2">
-          <img
-            class="h-8 w-8"
-            src="../assets/images/apple_fitness.png"
-            alt=""
-          />
+          <img class="h-8 w-8" src="../assets/images/apple_fitness.png" alt="" />
         </div>
         <div
-          class="absolute h-14 w-2/4 rounded-xl bg-transparent/70 flex -bottom-6 m-auto left-0 right-0 text-xs items-center p-1"
-        >
+          class="absolute h-14 w-2/4 rounded-xl bg-transparent/70 flex -bottom-6 m-auto left-0 right-0 text-xs items-center p-1">
           <div class="w-full flex h-full px-1">
             <div class="w-1/2 h-full flex p-2 items-center">
-              <div
-                @click="timerStarted === true ? pauseTimer() : startTimer()"
-                class="h-full bg-secondary active:bg-secondary/80 transition-all w-full rounded-xl flex items-center justify-center text-xl"
-              >
-                <i
-                  class="fa-solid fa-stopwatch text-black"
-                  :class="timerStarted === true ? 'animate-pulse' : ''"
-                ></i>
+              <div @click="timerStarted === true ? pauseTimer() : startTimer()"
+                class="h-full bg-secondary active:bg-secondary/80 transition-all w-full rounded-xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-stopwatch text-black" :class="timerStarted === true ? 'animate-pulse' : ''"></i>
               </div>
             </div>
-            <div
-              class="h-full w-1/2 flex flex-col text-xxs justify-center items-center"
-            >
+            <div class="h-full w-1/2 flex flex-col text-xxs justify-center items-center">
               <p class="text-sm">
                 {{ formattedMinutes }}:{{ formattedSeconds }}
               </p>
@@ -401,28 +347,15 @@ const uploadSets = async (id) => {
     <div class="flex flex-col carousel-vertical mt-8 pb-52 h-full">
       <div class="w-full h-full p-4 flex flex-col">
         <!-- first set -->
-        <div
-          class="w-full flex flex-col mt-6 carousel-item"
-          v-for="(exercise, index) in freshWorkout.exercises"
-        >
+        <div class="w-full flex flex-col mt-6 carousel-item" v-for="(exercise, index) in freshWorkout.exercises">
           <div class="flex justify-between">
             <h2 class="font-boldHeadline text-lg">
-              <input
-                v-model="exercise.name"
-                type="text"
-                class="text-base p-1 px-2 outline-secondary"
-                :class="
-                  exercise.name !== ''
-                    ? 'bg-transparent border-b-2 border-secondary rounded-none text-left p-0'
-                    : 'bg-gray-600 rounded-lg text-center'
-                "
-                placeholder="Exercise Name..."
-              />
+              <input v-model="exercise.name" type="text" class="text-base p-1 px-2 outline-secondary" :class="exercise.name !== ''
+                  ? 'bg-transparent border-b-2 border-secondary rounded-none text-left p-0'
+                  : 'bg-gray-600 rounded-lg text-center'
+                " placeholder="Exercise Name..." />
             </h2>
-            <button
-              class="bg-gray-600 px-3 rounded-lg"
-              @click="removeExerciseFromWorkout(index)"
-            >
+            <button class="bg-gray-600 px-3 rounded-lg" @click="removeExerciseFromWorkout(index)">
               <!-- <i class="fa-solid fa-ellipsis"></i> -->
               <i class="fa-solid fa-trash text-sm"></i>
             </button>
@@ -441,42 +374,25 @@ const uploadSets = async (id) => {
               </tr>
             </thead>
             <tbody class="text-sm">
-              <tr
-                class="h-8"
-                v-for="(set, index) in exercise.sets"
-                :key="index"
-                v-touch:swipe.left="removeSetFromNewExercise(exercise, index)"
-                :class="
-                  set.deleted == true
+              <tr class="h-8" v-for="(set, index) in exercise.sets" :key="index"
+                v-touch:swipe.left="removeSetFromNewExercise(exercise, index)" :class="set.deleted == true
                     ? 'bg-red-500 animate-ping-once'
                     : 'transition-all duration-1000 ease-out'
-                "
-              >
+                  ">
                 <td>{{ index + 1 }}</td>
                 <td>
-                  <input
-                    type="number"
-                    placeholder="50"
-                    class="w-12 bg-transparent text-center outline-secondary"
-                    v-model="set.weight"
-                  />
+                  <input type="number" placeholder="50" class="w-12 bg-transparent text-center outline-secondary"
+                    v-model="set.weight" />
                 </td>
                 <td>
-                  <input
-                    type="number"
-                    placeholder="50"
-                    class="w-12 bg-transparent text-center outline-secondary"
-                    v-model="set.reps"
-                  />
+                  <input type="number" placeholder="50" class="w-12 bg-transparent text-center outline-secondary"
+                    v-model="set.reps" />
                 </td>
                 <td>
-                  <div
-                    @click="completeNewSet(exercise, index)"
+                  <div @click="completeNewSet(exercise, index)"
                     class="flex items-center justify-center p-0.5 rounded-lg text-black transition-all duration-300 ease-in-out"
-                    :class="
-                      set?.completed === true ? 'bg-secondary' : 'bg-gray-400'
-                    "
-                  >
+                    :class="set?.completed === true ? 'bg-secondary' : 'bg-gray-400'
+                      ">
                     <i class="fa-solid fa-check"></i>
                   </div>
                 </td>
@@ -484,35 +400,24 @@ const uploadSets = async (id) => {
             </tbody>
           </table>
           <div class="w-full flex items-center justify-center mt-4">
-            <button
-              class="w-full p-1 my-2 rounded-lg bg-gray-600 text-sm"
-              @click="addNewSetToExercise(exercise, index)"
-            >
+            <button class="w-full p-1 my-2 rounded-lg bg-gray-600 text-sm" @click="addNewSetToExercise(exercise, index)">
               Add Another Set
             </button>
           </div>
         </div>
 
         <div class="w-full flex items-center justify-center mt-6">
-          <button
-            class="w-full p-1 my-2 rounded-lg text-black bg-secondary text-sm"
-            @click="addExerciseToFreshWorkout"
-          >
+          <button class="w-full p-1 my-2 rounded-lg text-black bg-secondary text-sm" @click="addExerciseToFreshWorkout">
             Add Exercise
           </button>
         </div>
         <div class="w-full flex items-center justify-center">
-          <button
-            class="w-full p-1 my-2 rounded-lg bg-blue-600 text-sm text-white"
-            @click="openAddToAppleModal"
-          >
+          <button class="w-full p-1 my-2 rounded-lg bg-blue-600 text-sm text-white" @click="openAddToAppleModal">
             Finish Workout
           </button>
         </div>
         <div class="w-full flex items-center justify-center pb-12">
-          <button
-            class="w-full p-1 my-2 rounded-lg bg-red-600 text-sm text-white"
-          >
+          <button class="w-full p-1 my-2 rounded-lg bg-red-600 text-sm text-white">
             Stop Workout
           </button>
         </div>

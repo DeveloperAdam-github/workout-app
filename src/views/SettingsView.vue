@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useUserStore } from '../stores/user';
 import { usePrimeStore } from '../stores/prime';
+import { useGlobalStore } from '../stores/global';
 import { Plugins } from '@capacitor/core';
 import { Camera, CameraResultType } from '@capacitor/camera';
 import supabase from '../supabase';
@@ -9,21 +10,29 @@ const { DistancePlugin, ProfilePicture } = Plugins;
 import PaymentModal from '../components/PaymentModal.vue';
 import PlanModal from '../components/PlanModal.vue';
 import SubscriptionModal from '../components/SubscriptionModal.vue';
+import StripeAccountModal from '../components/StripeAccountModal.vue';
+import MailBoxModal from '../components/MailBoxModal.vue';
 
 const store = useUserStore();
 const primeStore = usePrimeStore();
+const global = useGlobalStore();
 const user = ref(store.user);
 const userDetails = ref(store.userDetails);
+const hasPrimeStripeAccount = ref(store.hasPrimeStripeAccount);
 const steps = ref('');
 const imageData = ref('');
 const totalWorkouts = ref('');
 const profilePicURL = ref('');
 const profilePicExists = ref('');
 const enteredName = ref('What should we call you?');
+
 const editEnteredName = ref(false);
 const showClients = ref(false);
+const showInviteModal = ref(false);
 
-console.log(userDetails.value, 'whats the user?')
+
+const usersEmailAddress = ref('');
+const chosenPlan = ref({});
 
 const workouts = ref('');
 
@@ -148,6 +157,10 @@ const subscribeToPrimeAccount = () => {
   // primeStore.toggleShowPaymentModal();
 }
 
+const openStripeAccountModal = () => {
+  primeStore.toggleStripeAccountCreationModal();
+}
+
 const createNewPlan = (value) => {
   primeStore.toggleShowPlanModal(value)
 }
@@ -156,11 +169,74 @@ const openSubscriptionModal = () => {
   primeStore.toggleSubscriptionModal()
 }
 
+const openMessageCenter = () => {
+  global.toggleShowMessageCenter();
+}
+
+const test = (userId) => {
+  console.log('userID', userId);
+  store.getPrimeDetailsFromDatabase(userId)
+}
+
+const inviteToPlan = (plan) => {
+  console.log(plan, 'the plan info here');
+  showInviteModal.value = true;
+  chosenPlan.value = plan
+}
+
+const sendInvitationToUser = async () => {
+
+  // First we get the users ID from the database using their email
+  const { data, error } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', usersEmailAddress.value)
+
+  console.log(data, 'the user data here');
+  console.log(error, 'the error here');
+  if (error) {
+    return 'No user found'
+  }
+
+  // Once we have the users information we now update supabase
+
+  try {
+    console.log('make it here?');
+    await supabase
+      .from('messages')
+      .insert({
+        sent_from: user.value.id,
+        sent_to: data[0].id,
+        subject: 'You have been invited to subscribe to ...',
+        body: `Hey there, XXX has invited you the subscribe to their plan. "${chosenPlan.value.plan_name}" which is ${chosenPlan.value.plan_price}`,
+        message_action: {
+          "action": "subscription",
+          "price_id": chosenPlan.value.price_id,
+          "account_id": store.stripeAccountId,
+          "plan_name": chosenPlan.value.plan_name,
+          "plan_description": chosenPlan.value.plan_description,
+          "plan_price": Math.round(chosenPlan.value.plan_price / 100)
+        }
+      })
+      .then((response) => {
+        console.log(reponse, 'whats in th eresponse??')
+      });
+    console.log('or here');
+  } catch (error) {
+    console.error(error, 'it faileed here')
+  }
+}
+
+
 onMounted(() => {
   getDailySteps();
   getTotalWorkoutCount();
   getProfilePicture();
   checkLinkExists();
+  primeStore.getCreatedPlansForUser()
+  if (!store.isConnectedToRealTimeDB) {
+    store.subscribeToChannel()
+  }
 });
 // }
 </script>
@@ -170,14 +246,21 @@ onMounted(() => {
     <PaymentModal />
     <PlanModal />
     <SubscriptionModal />
+    <StripeAccountModal />
+    <MailBoxModal />
     <div class="w-full h-full flex flex-col bg-gray-200" v-if="primeStore.showPrimeUserSettings">
-      <div class="w-full h-20 bg-primary flex items-end justify-end px-4">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center bg-secondary mr-4"
-          @click="openSubscriptionModal">
+      <div class="w-full h-20 bg-primary flex items-end justify-end px-4 relative">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center bg-secondary" @click="openSubscriptionModal">
           <i class="fa-solid fa-dumbbell text-sm text-black"></i>
         </div>
+        <div class="w-5"></div>
         <div class="w-7 h-7 rounded-full flex items-center justify-center bg-secondary">
           <i class="fa-solid fa-cog text-sm text-black"></i>
+        </div>
+        <div @click="openMessageCenter"
+          class="w-7 h-7 rounded-full flex items-center justify-center bg-secondary right-4 -bottom-12 z-20 absolute">
+          <i class="fa-solid fa-envelope text-sm text-black relative"></i>
+          <div class="hidden bg-red-500 h-4 w-4 rounded-full absolute -top-1 -right-1"></div>
         </div>
       </div>
       <div class="w-full flex">
@@ -187,9 +270,12 @@ onMounted(() => {
               {{ totalWorkouts }}
             </h1>
             <!-- v-if="userDetails.account_type === 'prime'" -->
-            <button @click="showPrimeAdminSettings" v-if="!userDetails.account_type === 'prime'"
+            <button @click="showPrimeAdminSettings" v-if="userDetails.account_type === 'prime'"
               class="bg-white text-sm uppercase text-black rounded-2xl px-2 py-1 my-4">
               Show admin details
+            </button>
+            <button @click="test(store.user.id)">
+              Test buttton
             </button>
           </div>
           <div class="w-1/3 flex flex-col h-full pt-2">
@@ -245,6 +331,19 @@ onMounted(() => {
           Subscribe to prime account
         </button>
       </div>
+
+      <div class="w-full flex items-center justify-center text-black flex-col px-4"
+        v-if="userDetails.account_type == 'prime' && !hasPrimeStripeAccount">
+        <small class="text-center mt-4">You've now subscribed but to be able to create plans and take payments you'll need
+          to
+          either connect a
+          Stripe
+          account</small>
+        <button class="bg-secondary px-3 text-md uppercase py-1 rounded-2xl font-bold mt-6"
+          @click="openStripeAccountModal">
+          Connect now
+        </button>
+      </div>
     </div>
     <!-- If viewing prime admin settings -->
     <div v-else class="w-full h-full flex flex-col bg-gray-200 text-black p-4">
@@ -260,7 +359,7 @@ onMounted(() => {
             @click="showClients = true">Your clients</button>
           <button class="uppercase font-boldHeadline transition-all px-2 py-1 rounded-md"
             :class="showClients === false ? 'bg-primary text-white' : 'text-gray-500 bg-transparent'"
-            @click="showClients = false">Client plans</button>
+            @click="showClients = false">Your Plans</button>
         </div>
 
         <!-- Show clients table -->
@@ -268,16 +367,16 @@ onMounted(() => {
           <table class="text-left my-4 w-full">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Account status</th>
-                <th>Price</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th class="text-right">Price</th>
               </tr>
             </thead>
             <tbody class="text-sm">
               <tr>
-                <td>Adam</td>
+                <td>test@gmail.com</td>
                 <td>Active</td>
-                <td>£5.99</td>
+                <td class="text-right">£5.99</td>
               </tr>
             </tbody>
           </table>
@@ -285,29 +384,55 @@ onMounted(() => {
         <!-- Show clients table end -->
 
         <!-- Show client plans -->
-        <div class="h-full w-full" v-else>
+        <div class="h-full w-full relative" v-else>
+          <!--  -->
+          <teleport to="body">
+            <div class="w-screen h-screen top-0 left-0 absolute z-20 text-black" v-if="showInviteModal">
+              <div @click="showInviteModal = false"
+                class="w-full h-full bg-black/70 flex items-center justify-center flex-col p-8">
+                <div @click.stop class="w-[90%] h-fit rounded-md bg-white shadow-md flex flex-col p-4">
+                  <h1 class="font-boldHeadline text-center w-full underline">Invite user to subscribe</h1>
+                  <input type="text" placeholder="Email address here..."
+                    class="my-2 bg-transparent border rounded-md pl-2 h-8" v-model="usersEmailAddress">
+                  <button @click="sendInvitationToUser"
+                    class="px-4 py-2 bg-primary rounded-md text-xs text-white font-boldHeadline">Invite
+                    user</button>
+                </div>
+              </div>
+            </div>
+          </teleport>
+          <!--  -->
           <div class="w-full flex">
             <button class="bg-primary text-white px-2 py-1 text-xs my-2 rounded-md new uppercase"
               @click="createNewPlan">Create new plan</button>
           </div>
 
-          <table class="text-left my-4">
+          <table class="text-left my-4 w-full">
             <thead>
               <tr>
                 <th>Plan Name</th>
-                <th>Price</th>
-                <th>Edit</th>
+                <!-- need to figure this out... -->
+                <th class="text-right">Price</th>
+                <th class="text-right">Edit</th>
+                <th class="text-right">Invite</th>
               </tr>
             </thead>
-            <tbody class="text-sm">
-              <tr class="">
-                <td class="w-3/5 overflow-hidden text-ellipsis">
-                  <p class="h-10 w-full overflow-hidden max-h-10 text-ellipsis pr-4">
-                    4 day a week plan to improve bums & tums
+            <tbody class="text-sm w-full " v-if="primeStore.createdPlans">
+              <tr class="" v-for=" plan  in  primeStore.createdPlans ">
+                <td class="w-3/5 overflow-hidden text-ellipsis h-10">
+                  <p class="w-full overflow-hidden max-h-10 text-ellipsis pr-4">
+                    {{ plan.plan_name }}
                   </p>
                 </td>
-                <td class="">£25.99</td>
-                <td><button class="px-2 py-1 text-xs bg-primary text-white rounded-md">Edit</button></td>
+                <td class="text-right">£{{ Math.round(plan.plan_price / 100) }}</td>
+                <td class="text-right">
+                  <router-link :to="{ name: 'editPlan', params: { id: plan.id } }">
+                    <button class="px-2 py-1 text-xs bg-primary text-white rounded-md">Edit</button>
+                  </router-link>
+                </td>
+                <td class="text-right"><button @click="inviteToPlan(plan)"
+                    class="px-2 py-1 text-xs bg-primary text-white rounded-md">Invite</button>
+                </td>
               </tr>
             </tbody>
           </table>

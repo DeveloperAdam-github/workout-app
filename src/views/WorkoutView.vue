@@ -20,6 +20,8 @@ const previousWorkouts = ref(store.lastTenWorkouts);
 const previousWorkoutsFromApple = ref(store.lastTenWorkoutsFromApple);
 const previousCombinedWorkouts = ref(store.combinedLastTwentyWorkouts);
 const savedRoutines = ref([]);
+const showSavedRoutines = ref(true);
+const loadedRoutinesFromPlan = ref([]);
 const timer = ref({
   time: null,
   minutes: 0,
@@ -67,12 +69,16 @@ const getWorkoutsFromApple = async () => {
       });
     }
   });
+}
 
-  // previousCombinedWorkouts.value.push(previousWorkoutsFromApple.value);
-};
-// }
+// If user is a subscribed user we will get their subscribed plans from database
+
+const getSubscribedPlans = async () => {
+  const { data, error } = await supabase
+}
 
 const getRoutines = async () => {
+  console.log('getting routines?');
   const { data, error } = await supabase
     .from('workouts')
     .select(`*, exercises(*, sets(*))`)
@@ -119,6 +125,10 @@ onMounted(() => {
   // if (typeof window.capacitor !== 'undefined') {
   getWorkoutsFromApple();
   // }
+
+  if (!userStore.isConnectedToRealTimeDB) {
+    userStore.subscribeToChannel()
+  }
 });
 
 const startTimer = () => {
@@ -298,6 +308,13 @@ const completeSet = (exerciseName, index) => {
 
   console.log(set, 'whats this');
 };
+
+const toggleRoutines = () => {
+  showSavedRoutines.value = !showSavedRoutines.value;
+}
+
+
+
 </script>
 
 <template>
@@ -306,9 +323,25 @@ const completeSet = (exerciseName, index) => {
       <TopBar :title="'Your Workouts'" />
     </div>
     <div class="w-full flex h-full flex-col p-4">
-      <p>Your routines</p>
-      <div class="carousel w-full py-4">
+      <div class="flex items-center">
+        <p class="mr-4">Your routines</p>
+        <i @click="toggleRoutines" class="fa-solid fa-shuffle"></i>
+      </div>
+      <div class="carousel w-full py-4" v-if="showSavedRoutines">
+        <!-- Start workout when clicking it on? -->
         <YourRoutine v-for="(routine, index) in savedRoutines" :key="index" :routine="routine" />
+        <div
+          class="h-40 p-4 w-3/4 text-black flex-col bg-white shadow-md rounded-lg carousel-item mr-4 flex items-center justify-center">
+          <RouterLink to="/add-workout" class="h-full w-full flex items-center justify-center flex-col">
+            <p>Add New Routine</p>
+            <div class="h-10 w-10 mt-4 rounded-full border border-gray-500 flex items-center justify-center">
+              <i class="fa-solid fa-plus text-gray-500"></i>
+            </div>
+          </RouterLink>
+        </div>
+      </div>
+      <div class="carousel w-full py-4" v-else>
+        <YourRoutine v-for="(routine, index) in loadedRoutinesFromPlan" :key="index" :routine="routine" />
         <div
           class="h-40 p-4 w-3/4 text-black flex-col bg-white shadow-md rounded-lg carousel-item mr-4 flex items-center justify-center">
           <RouterLink to="/add-workout" class="h-full w-full flex items-center justify-center flex-col">
@@ -325,7 +358,7 @@ const completeSet = (exerciseName, index) => {
           Start a new workout
         </button>
       </div>
-      <p class="my-4" @click="showMeALL">Last workouts..</p>
+      <p class="my-4">Last workouts..</p>
       <div class="w-full h-[40%] carousel-vertical pb-12">
         <!-- v-for="(workout, index) in previousWorkouts" -->
         <LastWorkouts v-for="(workout, index) in sortedList" :workout="workout" :key="index" />

@@ -5,12 +5,18 @@ import WorkoutsPerWeek from '../components/WorkoutsPerWeek.vue';
 import WeightTrackGraph from '../components/WeightTrackGraph.vue';
 import DatePicker from '../components/DatePicker.vue';
 import { useWorkoutStore } from '../stores/workout';
+import { useUserStore } from '../stores/user';
 import { onMounted } from 'vue'
 
 const store = useWorkoutStore()
+const userStore = useUserStore()
 
 onMounted(() => {
   store.getAllPreviousWorkouts()
+
+  if (!userStore.isConnectedToRealTimeDB) {
+    userStore.subscribeToChannel()
+  }
 })
 </script>
 

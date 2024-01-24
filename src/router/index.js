@@ -8,6 +8,8 @@ import AddNewWorkout from '../views/AddNewWorkout.vue';
 import PreBuiltWorkout from '../views/PreBuiltWorkout.vue';
 import SuccessView from '../views/SuccessView.vue';
 import SignupSuccessView from '../views/SignupSuccessView.vue';
+import ConnectSuccessView from '../views/ConnectSuccessView.vue';
+import EditPlanView from '../views/EditPlanView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,9 +56,19 @@ const router = createRouter({
       component: SuccessView
     },
     {
+      path: '/connect-success/:id',
+      name: 'connectSuccess',
+      component: ConnectSuccessView
+    },
+    {
       path: '/signup-success',
       name: 'signup-sucess',
       component: SignupSuccessView
+    },
+    {
+      path: '/edit-plan/:id',
+      name: 'editPlan',
+      component: EditPlanView
     }
   ],
 });

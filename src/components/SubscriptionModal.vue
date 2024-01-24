@@ -1,16 +1,23 @@
 <script setup>
 import { computed, ref } from "vue";
 import { usePrimeStore } from "../stores/prime";
+import { useUserStore } from "../stores/user";
 
 
 const store = usePrimeStore();
+const userStore = useUserStore();
 const showPremiumTrainer = ref(true);
 const swipeDirection = ref("");
 
 const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY; // Replace with your Stripe publishable key
-const stripe = Stripe(publishableKey); // Initialize Stripe
+// const stripe = Stripe(publishableKey); // Initialize Stripe
+// const stripe = Stripe(publishableKey, {
+//   stripeAccount: "acct_1OZajwPmZMdNWL1r"
+// }); // Initialize Stripe
 const sessionId = ref('');
 const loading = ref(false);
+
+const priceInput = ref('');
 
 const swipeLeft = () => {
   swipeDirection.value = "left";
@@ -21,19 +28,38 @@ const swipeRight = () => {
   showPremiumTrainer.value = !showPremiumTrainer.value;
 }
 
-const createCheckoutSession = async () => {
+const createCheckoutSession = async (isAdmin, priceId) => {
+  let userToken = userStore.userSession.access_token;
+  let userId = userStore.user.id
+  let connectedAccountId = "acct_1OZajwPmZMdNWL1r"
+  let stripe;
+
+  if (connectedAccountId) {
+    stripe = Stripe(publishableKey, {
+      stripeAccount: "acct_1OZajwPmZMdNWL1r"
+    }); // Initialize Stripe
+  } else {
+    stripe = Stripe(publishableKey); // Initialize Stripe
+  }
+
+  console.log(isAdmin, 'here?');
+  console.log(priceId, 'the price id?');
+
   try {
     loading.value = true;
     // http://127.0.0.1:54321/functions/v1/create-stripe-session
     const response = await fetch('http://localhost:8000/create-stripe-session', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${userToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId: "cb199b01-3eff-4c88-8d5f-13476c31f876" }),
+      body: JSON.stringify({ userId, isAdminPlan: isAdmin, priceId, connectedAccountId }),
     });
     const data = await response.json();
     sessionId.value = data.sessionId;
+
+    console.log(data, 'data in here from the response from creating a session?');
 
     if (sessionId.value) {
       const { error } = await stripe.redirectToCheckout({ sessionId: sessionId.value });
@@ -45,6 +71,7 @@ const createCheckoutSession = async () => {
     loading.value = false;
   }
 };
+
 </script>
 
 <template>
@@ -75,7 +102,7 @@ const createCheckoutSession = async () => {
             month and you get access to all the features.
           </small>
           <button class="bg-secondary px-3 text-sm uppercase py-2 rounded-2xl font-bold my-6" :disabled="loading"
-            @click="createCheckoutSession">
+            @click="createCheckoutSession(true, 'price_1OC8R3BbwsPdB97DojAPvrQc')">
             Subscribe to prime account
           </button>
           <div class="flex-1 flex flex-col justify-end">
@@ -99,10 +126,11 @@ const createCheckoutSession = async () => {
           <h2 class="font-boldHeadline text-base mb-1">Do you want to sign up to a premium trainers plan?</h2>
           <small class="text-xs">You can sign up to a personal trainers plan that they have set for you, enter the code
             they provided into the input to subscribe to the plan!</small>
-          <input type="text" class="w-full rounded-2xl my-3 py-1 px-3 bg-transparent border-2 border-black/70">
+          <input type="text" class="w-full rounded-2xl my-3 py-1 px-3 bg-transparent border-2 border-black/70"
+            v-model="priceInput">
           <button class="bg-secondary px-3 text-sm uppercase py-2 rounded-2xl font-bold my-3"
-            @click="subscribeToPrimeAccount">
-            Subscribe to prime account
+            @click="createCheckoutSession(false, priceInput)">
+            Subscribe to prime account...
           </button>
           <div class="flex-1 flex flex-col justify-end">
             <div class="w-full h-8 flex items-center justify-center">
