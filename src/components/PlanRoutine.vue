@@ -47,20 +47,23 @@
         class="w-full bg-white text-black mb-2 border h-8 rounded-md pl-2"
         :class="pageError ? 'border-red-500' : 'border-black'" placeholder="Exercise name...">
       <small class="text-red-500" v-if="pageError">{{ pageError }}</small>
-      <button class="w-full bg-primary text-white h-8 rounded-md" @click="addExercise">{{ addExerciseToggle === false ?
-        'New Exercise' : 'Add Exercise' }}</button>
+      <button class="w-full bg-primary text-white h-8 rounded-md" @click="addDay">{{ addDayToggle === false ?
+        'New Day' : 'Add Day' }}</button>
+      <!-- <button class="w-full bg-primary text-white h-8 rounded-md" @click="addExercise">{{ addExerciseToggle === false ?
+        'New Exercise' : 'Add Exercise' }}</button> -->
       <button class="w-full bg-blue-500 text-white h-8 rounded-md my-4" @click="addExercise">Save Routine</button>
     </div>
   </div>
 </template>
-
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 const workout = ref(props.workout);
+const addDayToggle = ref(false)
 const addExerciseToggle = ref(false)
 const exerciseName = ref('')
 const pageError = ref('')
 const selectedExercise = ref('')
+const days = ref([])
 const exercises = ref([]);
 
 
@@ -69,6 +72,30 @@ const props = defineProps({
     type: Object,
   },
 });
+
+const addDay = () => {
+  if (addDayToggle === false) {
+    addDayToggle.value = true;
+    return;
+  }
+
+  if (dayName.value === '') {
+    pageError.value = 'Please enter a day name'
+    return;
+  }
+
+  days.value.push({
+    id: days.value.length + 1,
+    name: dayName.value,
+    exercises: [
+      {
+        id: 1,
+        name: '',
+        sets: [],
+      }
+    ]
+  })
+}
 
 
 const addExercise = () => {
@@ -145,6 +172,7 @@ const removeExercise = (exercise, index) => {
   }
 }
 
+// This is after confirmation of removal.
 const finalRemoveExercise = (exercise, index) => {
   const foundExercise = exercises.value.find(
     (ex) => ex.id === exercise
