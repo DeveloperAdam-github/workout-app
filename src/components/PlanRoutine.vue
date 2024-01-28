@@ -1,27 +1,81 @@
 <template>
-  <div class="w-full flex flex-col">
+  <div class="w-full flex flex-col overflow-scroll mb-10">
     <h1>Routine Name:</h1>
     <input class="w-full rounded-md bg-transparent border border-black pl-2 h-8" type="text"
       v-model="workout.workout_name" />
 
     <div class="w-full flex flex-col mt-4">
-      <div class="flex flex-col w-full mb-5">
-        <div class="w-full mb-2 flex items-center flex-col overflow-hidden" v-for="(exercise, index) in exercises"
-          :key="index" :class="selectedExercise === exercise.id ? 'max-h-fit' : 'max-h-10'">
-          <div class="w-full flex items-center justify-between relative">
+      <div class="flex flex-col w-full mb-" v-for="(day, index) in days" :key="index">
+        <div class="w-full mb-2 flex items-center flex-col overflow-hidden"
+          :class="selectedDay === day.id ? 'max-h-fit' : 'max-h-10'">
+          <div class="w-full flex items-center justify-between relative mb-1">
             <h2 class="text-xl w-full flex items-center justify-center text-center  rounded-md py-1 transition-all"
-              @click="selectExercise(exercise)" v-touch:swipe.left="removeExercise(exercise.id, index)"
-              :class="selectedExercise === exercise.id && !exercise.startDelete ? 'bg-secondary ' : exercise.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
-              {{ exercise.name
+              @click="selectDay(day)" v-touch:swipe.left="() => removeDay(day.id, index)"
+              :class="selectedDay === day.id && !day.startDelete ? 'bg-secondary border-b-4 border-gray-500' : day.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
+              {{ day.name
               }}
             </h2>
-            <div :class="exercise.startDelete === true ? 'translate-x-0' : 'translate-x-36'"
+            <div :class="day.startDelete === true ? 'translate-x-0' : 'translate-x-36'"
               class="transition-all  transform absolute right-0">
-              <button class="bg-red-500 text-white h-8 w-8 rounded-md" @click="finalRemoveExercise(exercise.id,
+              <button class="bg-red-500 text-white h-8 w-8 rounded-md" @click="finalRemoveDay(day,
                 index)">X</button>
             </div>
           </div>
-          <div class="w-full mt-2" v-for="(set, index) in exercise.sets"
+          <div v-for="(exercise, index) in day.exercises" class="w-full flex flex-col mt-1 -mb-1">
+            <div class="w-full mb-2 flex items-center flex-col overflow-hidden"
+              :class="selectedExercise === exercise.id ? 'max-h-fit' : 'max-h-10'">
+              <div class="w-full flex items-center justify-between relative">
+                <h3
+                  class="text-base w-full h-8 flex items-center justify-center text-center font-headline rounded-md py-1 transition-all"
+                  v-if="exercise" @click="selectExercise(exercise)"
+                  v-touch:swipe.left="() => removeExercise(day, exercise, index)"
+                  :class="selectedExercise === exercise.id && !exercise.startDelete ? 'bg-secondary' : exercise.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
+                  {{ exercise.name
+                  }}
+                </h3>
+                <div :class="exercise.startDelete === true ? 'translate-x-0' : 'translate-x-36'"
+                  class="transition-all  transform absolute right-0">
+                  <button class="bg-red-500 text-white h-8 w-8 rounded-md" @click="finalRemoveExercise(day, exercise,
+                    index)">X</button>
+                </div>
+              </div>
+              <div class="w-full mt-1 px-2" v-for="(set, index) in exercise.sets"
+                v-touch:swipe.left="removeSet(exercise, index)" :class="set.deleted == true
+                  ? 'bg-red-500 animate-ping-once'
+                  : 'transition-all duration-1000 ease-out'
+                  ">
+                <div class="w-full flex justify-between items-center">
+                  <label for="" class="mb-1 text-sm">Set {{ set.id }}</label>
+
+                  <div class="text-xs">
+                    <button>%</button>
+                    <button>Kg</button>
+                  </div>
+                </div>
+                <div class="w-full flex mb-2">
+                  <div class="w-1/2 mr-2 flex items-center">
+                    <label for="" class="mr-2 text-sm">Weight</label>
+                    <input class="w-14 bg-transparent border border-gray-400 h-7 rounded-md mr-1 pl-2 text-sm"
+                      type="number" v-model="set.weight">
+                    <p class="text-xs">
+                      KG
+                    </p>
+                  </div>
+                  <div class="w-1/2 ml-2 flex items-center justify-end">
+                    <label for="" class="text-sm">Reps</label>
+                    <input class="w-16 bg-transparent border border-gray-400 h-7 rounded-md ml-2 pl-2 text-sm"
+                      type="number" v-model="set.reps">
+                  </div>
+                </div>
+                <div class="w-full flex items-center justify-center">
+                  <div class="w-5/6 bg-gray-300/50 h-[1px]"></div>
+                </div>
+              </div>
+              <button class="w-1/2 bg-secondary text-black h-8 rounded-md my-2" @click="addSet(exercise)">Add
+                Set</button>
+            </div>
+          </div>
+          <!-- <div class="w-full mt-2" v-for="(set, index) in exercise.sets"
             v-touch:swipe.left="removeSet(exercise.id, index)" :class="set.deleted == true
               ? 'bg-red-500 animate-ping-once'
               : 'transition-all duration-1000 ease-out'
@@ -39,19 +93,26 @@
                   v-model="set.reps">
               </div>
             </div>
-          </div>
-          <button class="w-full bg-secondary text-black h-8 rounded-md my-2" @click="addSet(exercise)">Add Set</button>
+          </div> -->
+          <input v-if="addExerciseToggle" v-model="exerciseName" type="text"
+            class="w-full bg-white text-black mb-2 border h-8 rounded-md pl-2 mt-2"
+            :class="exerciseError ? 'border-red-500' : 'border-black'" placeholder="Exercise Name..">
+          <small class="text-red-500" v-if="exerciseError">{{ exerciseError }}</small>
+          <button class="w-full bg-primary text-white h-8 rounded-md my-2 mb-6" @click="addExercise(day)">{{
+            addExerciseToggle
+            === false ?
+            'New Exercise' : 'Add Exercise' }}</button>
         </div>
       </div>
-      <input v-if="addExerciseToggle" v-model="exerciseName" type="text"
+      <input v-if="addDayToggle" v-model="dayName" type="text"
         class="w-full bg-white text-black mb-2 border h-8 rounded-md pl-2"
-        :class="pageError ? 'border-red-500' : 'border-black'" placeholder="Exercise name...">
+        :class="pageError ? 'border-red-500' : 'border-black'" placeholder="Day 1 / Upper / Chest Day">
       <small class="text-red-500" v-if="pageError">{{ pageError }}</small>
-      <button class="w-full bg-primary text-white h-8 rounded-md" @click="addDay">{{ addDayToggle === false ?
+      <button class="w-full bg-primary text-white h-8 rounded-md mt-4" @click="addDay">{{ addDayToggle === false ?
         'New Day' : 'Add Day' }}</button>
       <!-- <button class="w-full bg-primary text-white h-8 rounded-md" @click="addExercise">{{ addExerciseToggle === false ?
         'New Exercise' : 'Add Exercise' }}</button> -->
-      <button class="w-full bg-blue-500 text-white h-8 rounded-md my-4" @click="addExercise">Save Routine</button>
+      <button class="w-full bg-blue-500 text-white h-8 rounded-md my-4">Save Routine</button>
     </div>
   </div>
 </template>
@@ -61,7 +122,10 @@ const workout = ref(props.workout);
 const addDayToggle = ref(false)
 const addExerciseToggle = ref(false)
 const exerciseName = ref('')
+const dayName = ref('')
 const pageError = ref('')
+const exerciseError = ref('')
+const selectedDay = ref('')
 const selectedExercise = ref('')
 const days = ref([])
 const exercises = ref([]);
@@ -74,7 +138,7 @@ const props = defineProps({
 });
 
 const addDay = () => {
-  if (addDayToggle === false) {
+  if (addDayToggle.value === false) {
     addDayToggle.value = true;
     return;
   }
@@ -87,30 +151,28 @@ const addDay = () => {
   days.value.push({
     id: days.value.length + 1,
     name: dayName.value,
-    exercises: [
-      {
-        id: 1,
-        name: '',
-        sets: [],
-      }
-    ]
+    exercises: []
   })
+
+  pageError.value = '';
+  dayName.value = '';
+  addDayToggle.value = false;
 }
 
 
-const addExercise = () => {
+const addExercise = (day) => {
   if (addExerciseToggle.value === false) {
     addExerciseToggle.value = true;
     return;
   }
 
   if (exerciseName.value === '') {
-    pageError.value = 'Please enter an exercise name'
+    exerciseError.value = 'Please enter an exercise name'
     return;
   }
 
-  exercises.value.push({
-    id: exercises.value.length + 1,
+  const exercise = {
+    id: day.exercises.length + 1,
     name: exerciseName.value,
     sets: [
       {
@@ -118,10 +180,25 @@ const addExercise = () => {
         weight: 0,
         reps: 0,
       }
-    ],
-  });
+    ]
+  }
 
-  pageError.value = '';
+  day.exercises.push(exercise);
+
+  // exercises.value.push({
+  //   id: exercises.value.length + 1,
+  //   name: exerciseName.value,
+  //   sets: [
+  //     {
+  //       id: 1,
+  //       weight: 0,
+  //       reps: 0,
+  //     }
+  //   ],
+  // });
+
+  selectedExercise.value = exercise.id;
+  exerciseError.value = '';
   exerciseName.value = '';
   addExerciseToggle.value = false;
 }
@@ -137,58 +214,102 @@ const addSet = (exercise) => {
   exercise.sets.push(set);
 }
 
-const removeSet = (excerciseId, index) => {
+const removeSet = (exercise, index) => {
   return function () {
 
-    console.log(excerciseId, index, 'any vlaues here?');
-    // find the exercise in the chosenWorkout we want to remove a set from
-    const exercise = exercises.value.find(
-      (ex) => ex.id === excerciseId
-    );
+    // console.log(excerciseId, index, 'any vlaues here?');
+    // // find the exercise in the chosenWorkout we want to remove a set from
+    // const exercise = days.value.exercises.find(
+    //   (ex) => ex.id === excerciseId
+    // );
 
     const set = exercise.sets[index];
     set.deleted = true;
-    console.log(set, 'hello');
 
     setTimeout(() => {
       exercise.sets.splice(index, 1);
     }, 250);
+
+    setTimeout(() => {
+      // get new index of each set and update it to id
+      exercise.sets.forEach((set) => {
+        set.id = exercise.sets.indexOf(set) + 1;
+      })
+    }, 300);
   }
 };
 
-const removeExercise = (exercise, index) => {
-  return function () {
-    const foundExercise = exercises.value.find(
-      (ex) => ex.id === exercise
-    )
-
-    if (foundExercise.startDelete === true) {
-      //  remove from array
-      exercises.value.splice(index, 1);
-      foundExercise.startDelete = false;
-      return;
-    }
-    foundExercise.startDelete = true;
+const removeExercise = (day, exercise, index) => {
+  console.log(exercise, index);
+  if (exercise.startDelete === true) {
+    //  remove from array
+    day.exercises.splice(index, 1);
+    // foundExercise.startDelete = false;
+    day.exercises.forEach((exercise) => {
+      exercise.id = day.exercises.indexOf(exercise) + 1;
+    })
+    return;
   }
+  exercise.startDelete = true;
+}
+
+const removeDay = (dayId, index) => {
+  const foundDay = days.value[index];
+
+  if (foundDay.startDelete) {
+    //  remove from array
+    days.value.splice(index, 1);
+    return;
+  }
+
+  foundDay.startDelete = true;
 }
 
 // This is after confirmation of removal.
-const finalRemoveExercise = (exercise, index) => {
-  const foundExercise = exercises.value.find(
-    (ex) => ex.id === exercise
-  )
-
-  if (foundExercise.startDelete === true) {
+const finalRemoveDay = (day, index) => {
+  console.log('click', day);
+  if (day.startDelete === true) {
     //  remove from array
-    exercises.value.splice(index, 1);
-    foundExercise.startDelete = false;
+    days.value.splice(index, 1);
     return;
   }
-  foundExercise.startDelete = true;
+}
+
+const finalRemoveExercise = (day, exercise, index) => {
+  if (exercise.startDelete === true) {
+    //  remove from array
+    day.exercises.splice(index, 1);
+    // foundExercise.startDelete = false;
+    day.exercises.forEach((exercise) => {
+      exercise.id = day.exercises.indexOf(exercise) + 1;
+    })
+    return;
+  }
+  exercise.startDelete = true;
+}
+
+const selectDay = (day) => {
+  if (day.startDelete === true) {
+    day.startDelete = false;
+    return;
+  }
+
+  if (selectedDay.value === day.id) {
+    selectedDay.value = null
+    addExerciseToggle.value = false;
+  } else {
+    selectedDay.value = day.id
+    selectedExercise.value = null
+    addExerciseToggle.value = false;
+  }
 }
 
 const selectExercise = (exercise) => {
-  console.log(exercise, 'exercise?');
+  console.log(exercise, 'the selected exercise');
+  if (exercise.startDelete === true) {
+    exercise.startDelete = false;
+    return;
+  }
   if (selectedExercise.value === exercise.id) {
     selectedExercise.value = null
   } else {
