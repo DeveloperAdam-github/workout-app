@@ -47,10 +47,15 @@
                 <div class="w-full flex justify-between items-center">
                   <label for="" class="mb-1 text-sm">Set {{ set.id }}</label>
 
-                  <div class="text-xs">
-                    <button>%</button>
-                    <button>Kg</button>
-                  </div>
+                  <!-- Toggle between percentge and kilos -->
+                  <!-- <div class="flex items-center">
+                    <p class="mr-2">%</p>
+                    <label class="switch">
+                      <input type="checkbox" v-model="unitToggle" @change="toggleUnit">
+                      <span class="slider"></span>
+                    </label>
+                    <p class="ml-2">kg</p>
+                  </div> -->
                 </div>
                 <div class="w-full flex mb-2">
                   <div class="w-1/2 mr-2 flex items-center">
@@ -118,6 +123,7 @@
 </template>
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import supabase from '../supabase';
 const workout = ref(props.workout);
 const addDayToggle = ref(false)
 const addExerciseToggle = ref(false)
@@ -317,5 +323,116 @@ const selectExercise = (exercise) => {
   }
 }
 
+const saveRoutineToDatabase = async () => {
+  try {
+    const { data, error } = await supabase.tx(async (tx) => {
+      // Insert "days" data and retrieve IDs then match the day names to the exercises arrays
+      const daysArrayObject = days.value.map((day) => {
+        return { day_name: day.name }
+      })
+      const dayResponse = await tx
+        .from("days")
+        .insert({
+
+        });
+
+
+      await supabase
+        .from('workouts')
+        .insert({
+          user: user.value.id,
+          workout_name: workout.value.name,
+          is_routine: true,
+        })
+        .select()
+        .then((response) => {
+          workoutId.value = response.data[0].id;
+        });
+
+      uploadExercises(workoutId.value);
+
+      const dayIDs = dayResponse.data.map(day => day.id);
+
+      // Insert "exercises" data
+      const exercisesData = [
+        { name: "123", day_id: dayIDs[0] } // Example for the first day
+      ];
+
+      await tx
+        .from("exercises")
+        .upsert(exercisesData, { onConflict: ["name"] });
+
+      // Insert "sets" data
+      const setsData = [
+        { weight: 0, reps: 0, exercise_id: exerciseIDs[0] } // Example for the first exercise
+      ];
+
+      await tx
+        .from("sets")
+        .upsert(setsData, { onConflict: ["exercise_id"] });
+    });
+  } catch (error) {
+
+  }
+
+}
+
 
 </script>
+
+
+<style scoped>
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+}
+
+/* Hide the default checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider (slider) */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+/* Add a "slider round" (slider round) */
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+/* When the checkbox is checked, add a blue background */
+input:checked+.slider {
+  background-color: #007bff;
+}
+
+/* When the checkbox is checked, move the slider */
+input:checked+.slider::before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+</style>
