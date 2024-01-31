@@ -24,16 +24,15 @@ const loadPlanWithID = async () => {
     .from('created_plans')
     .select('*')
     .eq('id', planId)
-    .select('*, plan_workouts(*)')
+    .select('*, plan_workouts(*, plan_days(*, plan_exercises(*, plan_sets(*))))')
 
   if (data[0].plan_workouts.length > 0) {
     workout.value = data[0].plan_workouts[0]
   }
   plan.value = data[0]
   createWorkoutName.value = data[0].plan_name
-
-  // Then load the related workout and set it as the "Workout"
 }
+
 
 const createRoutineForPlan = () => {
   createRoutine.value = true

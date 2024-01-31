@@ -12,7 +12,7 @@
             <h2 class="text-xl w-full flex items-center justify-center text-center  rounded-md py-1 transition-all"
               @click="selectDay(day)" v-touch:swipe.left="() => removeDay(day.id, index)"
               :class="selectedDay === day.id && !day.startDelete ? 'bg-secondary border-b-4 border-gray-500' : day.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
-              {{ day.name
+              {{ day.day_name
               }}
             </h2>
             <div :class="day.startDelete === true ? 'translate-x-0' : 'translate-x-36'"
@@ -21,7 +21,7 @@
                 index)">X</button>
             </div>
           </div>
-          <div v-for="(exercise, index) in day.exercises" class="w-full flex flex-col mt-1 -mb-1">
+          <div v-for="(exercise, index) in day.plan_exercises" class="w-full flex flex-col mt-1 -mb-1">
             <div class="w-full mb-2 flex items-center flex-col overflow-hidden"
               :class="selectedExercise === exercise.id ? 'max-h-fit' : 'max-h-10'">
               <div class="w-full flex items-center justify-between relative">
@@ -39,7 +39,7 @@
                     index)">X</button>
                 </div>
               </div>
-              <div class="w-full mt-1 px-2" v-for="(set, index) in exercise.sets"
+              <div class="w-full mt-1 px-2" v-for="(set, index) in exercise.plan_sets"
                 v-touch:swipe.left="removeSet(exercise, index)" :class="set.deleted == true
                   ? 'bg-red-500 animate-ping-once'
                   : 'transition-all duration-1000 ease-out'
@@ -112,12 +112,25 @@
       <input v-if="addDayToggle" v-model="dayName" type="text"
         class="w-full bg-white text-black mb-2 border h-8 rounded-md pl-2"
         :class="pageError ? 'border-red-500' : 'border-black'" placeholder="Day 1 / Upper / Chest Day">
+      <select v-if="addDayToggle" v-model="daySet" name="" id=""
+        class="w-full bg-white text-black mb-2 border border-black h-8 rounded-md pl-2">
+        <option value="" class="" disabled selected>Select a day
+          or leave blank</option>
+        <option value="mon">Monday</option>
+        <option value="tue">Tuesday</option>
+        <option value="wed">Wednesday</option>
+        <option value="thu">Thursday</option>
+        <option value="fri">Friday</option>
+        <option value="sat">Saturday</option>
+        <option value="sun">Sunday</option>
+      </select>
       <small class="text-red-500" v-if="pageError">{{ pageError }}</small>
       <button class="w-full bg-primary text-white h-8 rounded-md mt-4" @click="addDay">{{ addDayToggle === false ?
         'New Day' : 'Add Day' }}</button>
       <!-- <button class="w-full bg-primary text-white h-8 rounded-md" @click="addExercise">{{ addExerciseToggle === false ?
         'New Exercise' : 'Add Exercise' }}</button> -->
-      <button class="w-full bg-blue-500 text-white h-8 rounded-md my-4">Save Routine</button>
+      <button class="w-full bg-blue-500 text-white h-8 rounded-md my-4" @click="saveRoutineToDatabase">Save
+        Routine</button>
     </div>
   </div>
 </template>
@@ -129,12 +142,15 @@ const addDayToggle = ref(false)
 const addExerciseToggle = ref(false)
 const exerciseName = ref('')
 const dayName = ref('')
+const daySet = ref('')
 const pageError = ref('')
 const exerciseError = ref('')
 const selectedDay = ref('')
 const selectedExercise = ref('')
-const days = ref([])
+const days = ref(workout.value.plan_days.length > 0 ? props.workout.plan_days : [])
 const exercises = ref([]);
+
+console.log(days, 'show me days');
 
 
 const props = defineProps({
@@ -155,9 +171,10 @@ const addDay = () => {
   }
 
   days.value.push({
-    id: days.value.length + 1,
-    name: dayName.value,
-    exercises: []
+    id: 'temp-id' + days.value.length + 1,
+    day_name: dayName.value,
+    day_set: daySet.value,
+    plan_exercises: []
   })
 
   pageError.value = '';
@@ -178,30 +195,20 @@ const addExercise = (day) => {
   }
 
   const exercise = {
-    id: day.exercises.length + 1,
+    id: day.plan_exercises.length + 1,
     name: exerciseName.value,
-    sets: [
+    exercise_number: day.plan_exercises.length === 0 ? 1 : day.plan_exercises.length + 1,
+    plan_sets: [
       {
         id: 1,
+        set_number: 1,
         weight: 0,
         reps: 0,
       }
     ]
   }
 
-  day.exercises.push(exercise);
-
-  // exercises.value.push({
-  //   id: exercises.value.length + 1,
-  //   name: exerciseName.value,
-  //   sets: [
-  //     {
-  //       id: 1,
-  //       weight: 0,
-  //       reps: 0,
-  //     }
-  //   ],
-  // });
+  day.plan_exercises.push(exercise);
 
   selectedExercise.value = exercise.id;
   exerciseError.value = '';
@@ -212,23 +219,17 @@ const addExercise = (day) => {
 const addSet = (exercise) => {
   console.log(exercise, 'exercise?');
   const set = {
-    id: exercise.sets.length + 1,
+    id: exercise.plan_sets.length + 1,
+    set_number: exercise.plan_sets.length + 1,
     weight: 0,
     reps: 0,
   }
 
-  exercise.sets.push(set);
+  exercise.plan_sets.push(set);
 }
 
 const removeSet = (exercise, index) => {
   return function () {
-
-    // console.log(excerciseId, index, 'any vlaues here?');
-    // // find the exercise in the chosenWorkout we want to remove a set from
-    // const exercise = days.value.exercises.find(
-    //   (ex) => ex.id === excerciseId
-    // );
-
     const set = exercise.sets[index];
     set.deleted = true;
 
@@ -240,6 +241,7 @@ const removeSet = (exercise, index) => {
       // get new index of each set and update it to id
       exercise.sets.forEach((set) => {
         set.id = exercise.sets.indexOf(set) + 1;
+        set.set_number = exercise.sets.indexOf(set) + 1;
       })
     }, 300);
   }
@@ -295,6 +297,7 @@ const finalRemoveExercise = (day, exercise, index) => {
 }
 
 const selectDay = (day) => {
+  //  need to generate random ids firstly.
   if (day.startDelete === true) {
     day.startDelete = false;
     return;
@@ -323,58 +326,101 @@ const selectExercise = (exercise) => {
   }
 }
 
+
 const saveRoutineToDatabase = async () => {
+  const daysArrayObject = days.value.map((day) => {
+    // const isTempId = typeof day.id === 'string' && day.id.startsWith('temp-id');
+    // ...(isTempId ? {} : { id: day.id }),
+    return { day_name: day.day_name, day_set: day.day_set, workout_id: props.workout.id }
+  });
+
   try {
-    const { data, error } = await supabase.tx(async (tx) => {
-      // Insert "days" data and retrieve IDs then match the day names to the exercises arrays
-      const daysArrayObject = days.value.map((day) => {
-        return { day_name: day.name }
-      })
-      const dayResponse = await tx
-        .from("days")
-        .insert({
+    const { data, error } = await supabase
+      .from('plan_days')
+      .upsert(daysArrayObject, { onConflict: ['day_name', 'day_set', 'workout_id'] })
+      .select()
 
-        });
+    if (error) {
+      throw error;
+    }
 
-
-      await supabase
-        .from('workouts')
-        .insert({
-          user: user.value.id,
-          workout_name: workout.value.name,
-          is_routine: true,
-        })
-        .select()
-        .then((response) => {
-          workoutId.value = response.data[0].id;
-        });
-
-      uploadExercises(workoutId.value);
-
-      const dayIDs = dayResponse.data.map(day => day.id);
-
-      // Insert "exercises" data
-      const exercisesData = [
-        { name: "123", day_id: dayIDs[0] } // Example for the first day
-      ];
-
-      await tx
-        .from("exercises")
-        .upsert(exercisesData, { onConflict: ["name"] });
-
-      // Insert "sets" data
-      const setsData = [
-        { weight: 0, reps: 0, exercise_id: exerciseIDs[0] } // Example for the first exercise
-      ];
-
-      await tx
-        .from("sets")
-        .upsert(setsData, { onConflict: ["exercise_id"] });
-    });
-  } catch (error) {
-
+    if (data) {
+      const dayIds = data.map(day => day.id);
+      console.log(dayIds, 'dayids before passing');
+      await saveExercisesToDatabase(dayIds);
+    }
+  } catch (err) {
+    console.error(err);
   }
+}
 
+const saveExercisesToDatabase = async (dayIds) => {
+  const exercisesArray = [];
+  console.log(dayIds, 'the day ids?');
+
+  days.value.forEach((day, index) => {
+    day.plan_exercises.forEach((exercise) => {
+      const { plan_sets, id, created_at, ...exerciseData } = exercise;
+      exercisesArray.push({
+        ...exerciseData,
+        plan_day: dayIds[index]
+      });
+    });
+  });
+
+  try {
+    const { data, error } = await supabase
+      .from('plan_exercises')
+      .upsert(exercisesArray, { onConflict: ['name', 'exercise_number', 'plan_day'] })
+      .select()
+
+    console.log(data, 'anything here?');
+
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
+      const exerciseIds = data.map(exercise => exercise.id);
+      console.log(exerciseIds, 'exerciseIds before passing');
+      await saveSetsToExercisesInDatabase(exerciseIds);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+const saveSetsToExercisesInDatabase = async (exerciseIds) => {
+  const setsArray = [];
+
+  days.value.forEach((day) => {
+    day.plan_exercises.forEach((exercise, index) => {
+      exercise.plan_sets.forEach((set) => {
+        const { id, created_at, ...setData } = set
+        setsArray.push({
+          ...setData,
+          exercise_id: exerciseIds[index]
+        })
+      })
+    })
+  })
+
+  try {
+    const { data, error } = await supabase
+      .from('plan_sets')
+      .upsert(setsArray)
+      .select()
+
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
+      // reset the state after succesfully uploading to the database.
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 
