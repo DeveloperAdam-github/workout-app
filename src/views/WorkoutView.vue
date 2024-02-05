@@ -165,6 +165,7 @@ const pauseTimer = () => {
 
 const testRoutines = [1, 2, 3, 4, 5, 6];
 const startNewWorkout = ref(store.startNewWorkout);
+const startNewRun = ref(store.startNewRun);
 
 const popularWorkoutStore = usePopularWorkoutStore();
 const popularWorkouts = ref(popularWorkoutStore.popularWorkouts);
@@ -248,6 +249,11 @@ const removeSetFromNewExercise = (exerciseName, index) => {
 const newWorkoutStarted = () => {
   startNewWorkout.value = true;
   router.push('/new-workout');
+};
+
+const newRunStarted = () => {
+  startNewRun.value = true;
+  router.push('/new-run');
 };
 
 const addSetToExercise = (exerciseName, index) => {
@@ -356,6 +362,13 @@ const toggleRoutines = () => {
         <button @click="newWorkoutStarted"
           class="p-2 py-3 rounded-lg bg-secondary text-black w-full shadow-md shadow-black/50">
           Start a new workout
+        </button>
+      </div>
+      <!-- adam revise this -->
+      <div class="w-full py-4 flex">
+        <button @click="newRunStarted"
+          class="p-2 py-3 rounded-lg bg-secondary text-black w-full shadow-md shadow-black/50">
+          Start a new run
         </button>
       </div>
       <p class="my-4">Last workouts..</p>

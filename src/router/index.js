@@ -4,6 +4,7 @@ import WorkoutView from '../views/WorkoutView.vue';
 import StatsView from '../views/StatsView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import NewWorkoutView from '../views/NewWorkoutView.vue';
+import NewCardioView from '../views/NewCardioView.vue';
 import AddNewWorkout from '../views/AddNewWorkout.vue';
 import PreBuiltWorkout from '../views/PreBuiltWorkout.vue';
 import SuccessView from '../views/SuccessView.vue';
@@ -43,6 +44,11 @@ const router = createRouter({
       path: '/new-workout',
       name: 'newWorkout',
       component: NewWorkoutView,
+    },
+    {
+      path: '/new-cardio',
+      name: 'newCardio',
+      component: NewCardioView,
     },
     {
       path: '/workout-view',
