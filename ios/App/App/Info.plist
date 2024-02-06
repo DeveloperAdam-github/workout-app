@@ -15,6 +15,10 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location for tracking your runs.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need your location for tracking your runs even when the app is in the background.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires camera access to take profile picture.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

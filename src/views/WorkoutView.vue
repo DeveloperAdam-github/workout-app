@@ -253,7 +253,7 @@ const newWorkoutStarted = () => {
 
 const newRunStarted = () => {
   startNewRun.value = true;
-  router.push('/new-run');
+  router.push('/new-cardio');
 };
 
 const addSetToExercise = (exerciseName, index) => {
@@ -368,7 +368,7 @@ const toggleRoutines = () => {
       <div class="w-full py-4 flex">
         <button @click="newRunStarted"
           class="p-2 py-3 rounded-lg bg-secondary text-black w-full shadow-md shadow-black/50">
-          Start a new run
+          Start a Cardio Session
         </button>
       </div>
       <p class="my-4">Last workouts..</p>
