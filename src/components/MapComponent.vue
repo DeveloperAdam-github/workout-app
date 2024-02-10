@@ -6,13 +6,12 @@
 import { ref, onMounted, watchEffect, defineEmits } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import { Geolocation } from '@capacitor/geolocation';
+import { BackgroundTask } from '@capacitor/core'
 
 const props = defineProps(['tracking', 'route']);
 const emit = defineEmits(['start-tracking', 'stop-tracking', 'updateRouteData', 'updateTotalDistance']);
 
-// Replace 'YOUR_MAPBOX_ACCESS_TOKEN' with your actual Mapbox access token
 const accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
-// const center = [-74.044502, 40.689247]; // Default center coordinates
 let latitude = ref(0);
 let longitude = ref(0);
 let map = ref(null); // Declare map in the outer scope
@@ -36,13 +35,14 @@ async function requestLocationPermission() {
     await getCurrentLocation();
     console.log('granted');
   } else {
-    // Permission denied, handle accordingly
+    // TODO
   }
 }
 
 async function updateRoute() {
   console.log('updte Route');
-  // Set up a GPS data update interval (e.g., every 5 seconds)
+
+  // GPS interval
   const gpsUpdateInterval = setInterval(async () => {
     console.log('interval?');
     console.log(props.tracking, 'whats tracking?');
@@ -114,12 +114,38 @@ async function updateRoute() {
     } else {
       clearInterval(gpsUpdateInterval);
     }
-  }, 5000); // Update every 5 seconds (adjust this as needed)
+  }, 15000); // Update every 15 seconds - trial this as might need to update!
+}
+
+// TEST THIS ON MOBILE
+async function startBackgroundTask() {
+  try {
+    await BackgroundTask.register({
+      taskId: 'updateRouteTask',
+      taskName: 'Update Route',
+      async taskHandler() {
+        console.log('Background task running...');
+        await updateRoute();
+      },
+      period: 15000, // Run every 15 seconds
+    });
+  } catch (error) {
+    console.error('Error starting background task:', error);
+  }
+}
+// Function to end background task
+async function endBackgroundTask() {
+  try {
+    await BackgroundTask.cancel({ taskId: 'updateRouteTask' });
+    console.log('Background task ended.');
+  } catch (error) {
+    console.error('Error ending background task:', error);
+  }
 }
 
 // Import the Haversine formula function
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Radius of the Earth in kilometers
+  const R = 6371; // Radius of the Earth in kilometers // TODO mke it a variable so can use Miles or KM
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -129,7 +155,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     Math.sin(dLon / 2) *
     Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distance in kilometers
+  const distance = R * c; // Distance in kilometers (for now)
   return distance;
 }
 
@@ -141,8 +167,8 @@ async function getCurrentLocation() {
 
   // Initialize the Mapbox map
   map.value = new mapboxgl.Map({
-    container: 'map', // Element ID where the map will be displayed
-    style: 'mapbox://styles/mapbox/streets-v11', // Mapbox style URL
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v11',
     center: [longitude.value, latitude.value],
     zoom: zoom,
     ...mapOptions.value, // Apply custom map options
@@ -152,14 +178,11 @@ async function getCurrentLocation() {
     .setLngLat([longitude.value, latitude.value])
     .addTo(map.value);
 
-  // Watch for changes in the tracking prop
   watchEffect(() => {
     if (props.tracking) {
-      // Start tracking logic
       updateRoute();
     } else {
-      // Stop tracking logic
-      // For example, stop updating the route
+      // Stop tracking logic TODO
     }
   });
 }

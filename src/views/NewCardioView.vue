@@ -14,18 +14,18 @@ const route = ref({
     coordinates: [], // Store coordinates to draw the route
   },
 });
-let totalDistance = ref(0); // Create a variable to store the total distance
-let totalCalories = ref(0); // Create a variable to store the total calories burned
-const weightKg = 80; // Set your weight in kilograms
+let totalDistance = ref(0);
+let totalCalories = ref(0);
+const weightKg = 80; // ADAM - Default set for now change later
 
-// Define a function to handle the emitted total distance from the child component
 const handleUpdateTotalDistance = (newDistance) => {
   totalDistance.value = newDistance;
 
-  // Update the total calories burned based on the new distance
   totalCalories.value = calculateCaloriesBurned(weightKg, totalDistance.value);
 };
 
+
+//  We need to doudble check the calcs here.
 // Function to calculate calories burned based on weight (in kg) and distance (in km)
 function calculateCaloriesBurned(weightKg, distanceKm) {
   const MET = 3.9; // MET value for walking at a moderate pace
@@ -33,9 +33,9 @@ function calculateCaloriesBurned(weightKg, distanceKm) {
   return caloriesBurned;
 }
 
-// Event handler for the updateRouteData event
+
+// TODO!!!!!  
 function handleUpdateRouteData(newRouteData) {
-  // Update the route data in the parent component
   route.value = newRouteData;
 }
 
