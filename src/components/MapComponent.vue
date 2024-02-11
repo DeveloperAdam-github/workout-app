@@ -6,7 +6,7 @@
 import { ref, onMounted, watchEffect, defineEmits } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import { Geolocation } from '@capacitor/geolocation';
-import { BackgroundTask } from '@capacitor/core'
+import { BackgroundTask } from '@capacitor/background-task';
 
 const props = defineProps(['tracking', 'route']);
 const emit = defineEmits(['start-tracking', 'stop-tracking', 'updateRouteData', 'updateTotalDistance']);
@@ -117,31 +117,6 @@ async function updateRoute() {
   }, 15000); // Update every 15 seconds - trial this as might need to update!
 }
 
-// TEST THIS ON MOBILE
-async function startBackgroundTask() {
-  try {
-    await BackgroundTask.register({
-      taskId: 'updateRouteTask',
-      taskName: 'Update Route',
-      async taskHandler() {
-        console.log('Background task running...');
-        await updateRoute();
-      },
-      period: 15000, // Run every 15 seconds
-    });
-  } catch (error) {
-    console.error('Error starting background task:', error);
-  }
-}
-// Function to end background task
-async function endBackgroundTask() {
-  try {
-    await BackgroundTask.cancel({ taskId: 'updateRouteTask' });
-    console.log('Background task ended.');
-  } catch (error) {
-    console.error('Error ending background task:', error);
-  }
-}
 
 // Import the Haversine formula function
 function calculateDistance(lat1, lon1, lat2, lon2) {

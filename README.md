@@ -27,3 +27,18 @@ npm run dev
 ```sh
 npm run build
 ```
+
+<!-- New package.json -->
+<!--  "@capacitor/android": "^5.6.0",
+    "@capacitor/camera": "^5.0.0",
+    "@capacitor/core": "^5.7.0",
+    "@capacitor/geolocation": "^5.0.7",
+    "@capacitor/ios": "^5.6.0", -->
+
+<!-- old package.json -->
+<!--
+"@capacitor/android": "^4.6.1",
+    "@capacitor/camera": "^4.1.4",
+    "@capacitor/core": "^5.6.0",
+    "@capacitor/geolocation": "^5.0.7",
+    "@capacitor/ios": "^4.6.1", -->
