@@ -39,6 +39,12 @@
 	<string>We need your location for tracking your runs even when the app is in the background.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location for tracking your runs.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+  <string>We need to track your location while your device is locked.</string>
+	<key>UIBackgroundModes</key>
+  <array>
+    <string>location</string>
+  </array>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app requires camera/photo access to take profile picture.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

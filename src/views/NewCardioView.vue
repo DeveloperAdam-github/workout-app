@@ -3,9 +3,11 @@ import MapComponent from '../components/MapComponent.vue';
 import { ref } from 'vue'
 
 const tracking = ref(false);
-const time = ref('00:00:00');
+const time = ref('00:00:00')
+const startTime = ref('00:00:00');
+let timerInterval = null;
 let timer = null;
-let totalMilliseconds = 0;
+const totalMilliseconds = ref(0);
 const route = ref({
   type: 'Feature',
   properties: {},
@@ -27,11 +29,23 @@ const handleUpdateTotalDistance = (newDistance) => {
 
 //  We need to doudble check the calcs here.
 // Function to calculate calories burned based on weight (in kg) and distance (in km)
-function calculateCaloriesBurned(weightKg, distanceKm) {
-  const MET = 3.9; // MET value for walking at a moderate pace
-  const caloriesBurned = (MET * weightKg) * distanceKm;
+function calculateCaloriesBurned(weightKg, distanceKm,) {
+  const durationMinutes = totalMilliseconds.value / 60000
+  let MET = 3.5; // Moderate walking pace
+  const speed = distanceKm / (durationMinutes / 60); // Speed in km/h
+
+  if (speed < 5) {
+    MET = 3.5; // slow walking
+  } else if (speed >= 5 && speed < 8) {
+    MET = 4.3; // moderate walking
+  } else if (speed >= 8) {
+    MET = 5; // brisk walking
+  }
+
+  const caloriesBurned = (MET * weightKg * durationMinutes) / 60;
   return caloriesBurned;
 }
+
 
 
 // TODO!!!!!  
@@ -41,30 +55,40 @@ function handleUpdateRouteData(newRouteData) {
 
 
 function startTracking() {
-  if (tracking.value === false) {
-
+  if (!tracking.value) {
     tracking.value = true;
+    startTime.value = Date.now(); // Record start time
     route.value.geometry.coordinates = []; // Clear existing route data
-    time.value = '00:00:00.00';
+    time.value = '00:00:00';
+    totalMilliseconds.value = 0; // Reset if starting a new session
 
-    // Start the timer
-    timer = setInterval(updateTime, 10); // Update every millisecond
-    console.log('starting tracking');
+    // Start or restart the timer interval
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      updateTime();
+    }, 1000); // Update the time display every second
+
+    console.log('Starting tracking');
   } else {
+    // Stop tracking and clear the interval
     tracking.value = false;
-    console.log('stopping tracking');
-    clearInterval(timer);
+    clearInterval(timerInterval);
+    console.log('Stopping tracking');
   }
 }
 
 function updateTime() {
-  // Increment the timer by 10 milliseconds
-  totalMilliseconds += 10;
-  const minutes = Math.floor(totalMilliseconds / 60000);
-  const seconds = Math.floor((totalMilliseconds % 60000) / 1000);
-  const milliseconds = Math.floor((totalMilliseconds % 1000) / 10); // Display two digits for milliseconds
 
-  time.value = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(2, '0')}`;
+  if (startTime.value) {
+    const now = Date.now();
+    totalMilliseconds.value = now - startTime.value;
+
+    const hours = Math.floor(totalMilliseconds.value / 3600000);
+    const minutes = Math.floor((totalMilliseconds.value % 3600000) / 60000);
+    const seconds = Math.floor((totalMilliseconds.value % 60000) / 1000);
+
+    time.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
 }
 
 
@@ -81,6 +105,9 @@ function updateTime() {
       </div>
     </div>
     <div class="w-full flex flex-col h-[30%]">
+      <!-- <div class="bg-secondary h-16 absolute w-full top-4 left-0 text-white flex items-center overflow-scroll">
+        {{ route.geometry.coordinates }}
+      </div> -->
       <div class="grid grid-cols-2 grid-rows-2  h-full gap-4 my-4 text-black">
         <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
           <div class="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-white">
@@ -94,7 +121,7 @@ function updateTime() {
             <i class="fa-solid fa-shoe-prints -rotate-90"></i>
           </div>
           <h4>Distance:</h4>
-          <p class="text-xl font-boldHeadline">{{ totalDistance.toFixed(0) }} km</p>
+          <p class="text-xl font-boldHeadline">{{ totalDistance.toFixed(2) }} km</p>
         </div>
         <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
           <div class="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-white">
