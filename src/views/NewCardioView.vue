@@ -1,8 +1,15 @@
 <script setup>
 import MapComponent from '../components/MapComponent.vue';
-import { ref } from 'vue'
+import { useUserStore } from "../stores/user";
+import { useRouter, useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue'
+import supabase from '../supabase';
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
 
 const tracking = ref(false);
+const isLoadedWorkout = ref(false);
+const workoutData = ref(null)
 const time = ref('00:00:00')
 const startTime = ref('00:00:00');
 let timerInterval = null;
@@ -19,6 +26,12 @@ const route = ref({
 let totalDistance = ref(0);
 let totalCalories = ref(0);
 const weightKg = 80; // ADAM - Default set for now change later
+const confirmSave = ref(false);
+const save = ref(false);
+
+const userStore = useUserStore()
+const router = useRouter();
+const vueRoute = useRoute();
 
 const handleUpdateTotalDistance = (newDistance) => {
   totalDistance.value = newDistance;
@@ -91,6 +104,74 @@ function updateTime() {
   }
 }
 
+function timeFormat(time) {
+  const hours = Math.floor(time / 3600000);
+  const minutes = Math.floor((time % 3600000) / 60000);
+  const seconds = Math.floor((time % 60000) / 1000);
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+const saveCardioToDB = async () => {
+  if (confirmSave.value === false) {
+    confirmSave.value = true;
+  } else {
+
+    const workoutData = {
+      cardio_type: 'running',
+      cardio_time: totalMilliseconds.value,
+      cardio_calories: Number(totalCalories.value.toFixed(2)),
+      cardio_distance: Number(totalDistance.value.toFixed(2)),
+      cardio_coords: { coords: route.value.geometry.coordinates },
+      user_id: userStore.user.id
+    }
+    // Save to DB
+    await supabase
+      .from('cardio_workouts')
+      .insert(workoutData)
+      .select()
+      .then((response) => {
+        console.log(response, 'response');
+        if (response.data) {
+          save.value = true
+          // toast here?
+          toast("Saved!", {
+            "theme": "dark",
+            "type": "success",
+            "position": "bottom-center",
+            "closeOnClick": false,
+            "pauseOnHover": false,
+            "pauseOnFocusLoss": false,
+            "dangerouslyHTMLString": true
+          })
+
+          setTimeout(() => {
+            router.back();
+          }, 3500);
+        }
+      });
+
+    confirmSave.value = false;
+  }
+}
+
+
+onMounted(async () => {
+  if (vueRoute.query.workout) {
+    isLoadedWorkout.value = true;
+
+    const { data, error } = await supabase
+      .from('cardio_workouts')
+      .select('*')
+      .eq('id', vueRoute.query.workout)
+
+    workoutData.value = data[0]
+    // route.value.geometry.coordinates = data[0].cardio_coords.coords;
+
+    console.log(workoutData.value, 'the data');
+  }
+})
+
 
 
 </script>
@@ -100,8 +181,8 @@ function updateTime() {
     <div class="w-full flex flex-col h-[50%]">
       <div class="h-full bg-white w-full rounded-lg shadow-lg flex items-center justify-center">
         <!-- Show map here -->
-        <MapComponent :tracking="tracking" :route="route" @updateRouteData="handleUpdateRouteData"
-          @updateTotalDistance="handleUpdateTotalDistance" />
+        <MapComponent :tracking="tracking" :route="route" :isLoadedWorkout="isLoadedWorkout" :workout="workoutData"
+          @updateRouteData="handleUpdateRouteData" @updateTotalDistance="handleUpdateTotalDistance" />
       </div>
     </div>
     <div class="w-full flex flex-col h-[30%]">
@@ -109,28 +190,35 @@ function updateTime() {
         {{ route.geometry.coordinates }}
       </div> -->
       <div class="grid grid-cols-2 grid-rows-2  h-full gap-4 my-4 text-black">
-        <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
+        <div :class="workoutData ? 'bg-secondary/80' : 'bg-white'"
+          class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
           <div class="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-white">
             <i class="fa-regular fa-clock"></i>
           </div>
-          <h4>Time:</h4>
-          <p class="text-xl font-boldHeadline">{{ time }}</p>
+          <h4>Time: {{ route.geometry.coordinates.length }}</h4>
+          <p class="text-xl font-boldHeadline" v-if="workoutData">{{ timeFormat(workoutData.cardio_time) }}</p>
+          <p class="text-xl font-boldHeadline" v-else>{{ time }}</p>
         </div>
-        <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
+        <div :class="workoutData ? 'bg-secondary/80' : 'bg-white'"
+          class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
           <div class="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-white">
             <i class="fa-solid fa-shoe-prints -rotate-90"></i>
           </div>
           <h4>Distance:</h4>
-          <p class="text-xl font-boldHeadline">{{ totalDistance.toFixed(2) }} km</p>
+          <p class="text-xl font-boldHeadline" v-if="workoutData">{{ workoutData.cardio_distance }} km</p>
+          <p class="text-xl font-boldHeadline" v-else>{{ totalDistance.toFixed(2) }} km</p>
         </div>
-        <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
+        <div :class="workoutData ? 'bg-secondary/80' : 'bg-white'"
+          class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
           <div class="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-white">
             <i class="fa-solid fa-fire"></i>
           </div>
           <h4>Calories:</h4>
-          <p class="text-xl font-boldHeadline">{{ totalCalories.toFixed(0) }} Kcal</p>
+          <p class="text-xl font-boldHeadline" v-if="workoutData">{{ workoutData.cardio_calories }} Kcal</p>
+          <p class="text-xl font-boldHeadline" v-else>{{ totalCalories.toFixed(0) }} Kcal</p>
         </div>
-        <div class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
+        <div :class="workoutData ? 'bg-secondary/80' : 'bg-white'"
+          class="bg-white rounded-lg shadow-lg p-2 flex flex-col justify-between">
           <div class="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-white">
             <i class="fa-regular fa-heart"></i>
           </div>
@@ -139,10 +227,14 @@ function updateTime() {
         </div>
       </div>
     </div>
-    <div>
+    <div v-if="!isLoadedWorkout">
       <!-- Scroll to select  -->
       <button class="w-full h-10 bg-secondary text-black rounded-full" @click="startTracking">
         {{ tracking === false ? 'Start Tracking' : 'Stop Tracking' }}
+      </button>
+      <button class="w-full h-10 bg-primary text-white rounded-full mt-2" @click="saveCardioToDB"
+        v-if="tracking === false && route.geometry.coordinates.length > 0 && save == false">
+        {{ confirmSave === false ? 'Finish' : 'Save & Quit' }}
       </button>
     </div>
   </div>

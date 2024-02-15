@@ -5,14 +5,18 @@
 <script setup>
 import { ref, onMounted, watchEffect, defineEmits, onUnmounted } from 'vue';
 import mapboxgl from 'mapbox-gl';
+import { useRoute } from 'vue-router';
 import { Geolocation } from '@capacitor/geolocation';
 import { registerPlugin } from '@capacitor/core'
 import { App } from '@capacitor/app'
 
-const props = defineProps(['tracking', 'route']);
+const props = defineProps(['tracking', 'route', 'isLoadedWorkout', 'workout']);
 const emit = defineEmits(['start-tracking', 'stop-tracking', 'updateRouteData', 'updateTotalDistance']);
+const vueRoute = useRoute();
 
 const BackgroundGeolocation = registerPlugin("BackgroundGeolocation");
+const gpsUpdateInterval = null;
+
 const accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
 let latitude = ref(0);
 let longitude = ref(0);
@@ -35,10 +39,13 @@ const backgroundConfig = {
 }
 
 async function startBackgroundTracking() {
+  clearInterval(gpsUpdateInterval);
   const backgroundConfig = {
     // Your configuration here
-    distanceFilter: 15, // Update the location every 15 meters
+    // distanceFilter: 5, // Update the location every 15 meters
+    backgroundMessage: "Tracking GPS for map data"
   };
+
 
   watcherId = await BackgroundGeolocation.addWatcher(backgroundConfig, (location) => {
     console.log('New location:', location);
@@ -51,6 +58,11 @@ function stopBackgroundTracking() {
   if (watcherId !== null) {
     BackgroundGeolocation.removeWatcher({ id: watcherId });
     watcherId = null;
+
+    // Update the route on the map
+    updateMapRoute();
+
+
   }
 }
 
@@ -66,8 +78,8 @@ function updateLocation(location) {
     marker.value.setLngLat(newCoordinate);
   }
 
-  // Update the route on the map
-  updateMapRoute();
+  // // Update the route on the map
+  // updateMapRoute();
 
   // Optionally, calculate and update distance if needed
 }
@@ -78,19 +90,21 @@ async function requestLocationPermission() {
   const { state } = await Geolocation.requestPermissions();
   if (state === 'granted') {
     await getCurrentLocation();
-    // console.log('granted');
   } else {
     // TODO
   }
 }
 
 async function updateRoute() {
-  console.log('updte Route');
+
+  // Clear existing interval before setting a new one
+  if (gpsUpdateInterval !== null) {
+    clearInterval(gpsUpdateInterval);
+    gpsUpdateInterval = null; // Reset the interval ID
+  }
 
   // GPS interval
-  const gpsUpdateInterval = setInterval(async () => {
-    // console.log('interval?');
-    // console.log(props.tracking, 'whats tracking?');
+  gpsUpdateInterval = setInterval(async () => {
     if (props.tracking === true) {
       const coordinates = await Geolocation.getCurrentPosition();
       const { latitude, longitude } = coordinates.coords;
@@ -99,7 +113,6 @@ async function updateRoute() {
       const newCoordinate = [longitude, latitude];
       props.route.geometry.coordinates.push(newCoordinate);
 
-      // console.log('newCoordinate', newCoordinate);
 
       // Emit the updated route data back to the parent component
       emit('updateRouteData', props.route);
@@ -154,19 +167,18 @@ async function updateRoute() {
       //     emit('updateTotalDistance', totalDistance.value);
 
       //     // Log or display the calculated distance
-      //     console.log(`Distance: ${distance} km`);
-      //     console.log(`Total Distance: ${totalDistance.value} km`);
       //   }
 
       // }
     } else {
       clearInterval(gpsUpdateInterval);
+      gpsUpdateInterval = null;
     }
-  }, 15000); // Update every 15 seconds - trial this as might need to update!
+  }, 3000); // Update every 6 seconds - trial this as might need to update!
 }
 
 function updateMapRoute() {
-  console.log('updating map ....... 🔥');
+
   if (map.value && props.route.geometry.coordinates.length > 1) {
     // Ensure the map source for the route exists, or create it
     if (!map.value.getSource('route')) {
@@ -189,7 +201,6 @@ function updateMapRoute() {
       map.value.getSource('route').setData(props.route.geometry);
     }
   } else {
-    console.log('no map found is that why?');
   }
 
   if (props.route.geometry.coordinates.length >= 2) {
@@ -210,8 +221,6 @@ function updateMapRoute() {
     emit('updateTotalDistance', totalDistance.value);
 
     // Log or display the calculated distance
-    // console.log(`Distance: ${distance} km`);
-    // console.log(`Total Distance: ${totalDistance.value} km`);
   }
 }
 
@@ -233,31 +242,103 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 async function getCurrentLocation() {
-  const coordinates = await Geolocation.getCurrentPosition();
-  // console.log(coordinates, 'whats in here for co-ords');
-  latitude.value = coordinates.coords.latitude;
-  longitude.value = coordinates.coords.longitude;
+  if (vueRoute.query.workout) {
+    setTimeout(() => {
+      const coordinates = props.workout.cardio_coords.coords[0]
+      latitude.value = coordinates[1]
+      longitude.value = coordinates[0]
 
-  // Initialize the Mapbox map
-  map.value = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [longitude.value, latitude.value],
-    zoom: zoom,
-    ...mapOptions.value, // Apply custom map options
-  });
 
-  marker.value = new mapboxgl.Marker()
-    .setLngLat([longitude.value, latitude.value])
-    .addTo(map.value);
+      map.value = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [longitude.value, latitude.value],
+        zoom: zoom,
+        ...mapOptions.value,
+      });
 
-  watchEffect(() => {
-    if (props.tracking) {
-      updateRoute();
-    } else {
-      // Stop tracking logic TODO
-    }
-  });
+      marker.value = new mapboxgl.Marker()
+        .setLngLat([longitude.value, latitude.value])
+        .addTo(map.value);
+    }, 500)
+
+    // watchEffect(() => {
+    //   if (props.workout.cardio_coords) {
+    //     const coordinates = props.workout.cardio_coords.coords[0]
+    //     latitude.value = coordinates[1]
+    //     longitude.value = coordinates[0]
+
+
+    //     map.value = new mapboxgl.Map({
+    //       container: 'map',
+    //       style: 'mapbox://styles/mapbox/streets-v11',
+    //       center: [longitude.value, latitude.value],
+    //       zoom: zoom,
+    //       ...mapOptions.value,
+    //     });
+
+    //     marker.value = new mapboxgl.Marker()
+    //       .setLngLat([longitude.value, latitude.value])
+    //       .addTo(map.value);
+
+    //   } else {
+    //     // Stop tracking logic TODO
+    //   }
+    // });
+
+
+    setTimeout(() => {
+      if (map.value && props.workout.cardio_coords.coords.length > 1) {
+        if (!map.value.getSource('route')) {
+          map.value.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'LineString',
+              coordinates: props.workout.cardio_coords.coords
+            },
+          });
+
+          map.value.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            paint: {
+              'line-color': '#bbf246',
+              'line-width': 4,
+            },
+          });
+        } else {
+          // Update the existing line source
+          map.value.getSource('route').setData({ type: 'LineString', coordinates: props.workout.cardio_coords.coords.length.coords });
+        }
+      }
+    }, 1000)
+  } else {
+    const coordinates = await Geolocation.getCurrentPosition();
+    latitude.value = coordinates.coords.latitude;
+    longitude.value = coordinates.coords.longitude;
+
+    // Initialize the Mapbox map
+    map.value = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [longitude.value, latitude.value],
+      zoom: zoom,
+      ...mapOptions.value,
+    });
+
+    marker.value = new mapboxgl.Marker()
+      .setLngLat([longitude.value, latitude.value])
+      .addTo(map.value);
+
+    watchEffect(() => {
+      if (props.tracking) {
+        updateRoute();
+      } else {
+        // Stop tracking logic TODO
+      }
+    });
+  }
 }
 
 
@@ -268,7 +349,7 @@ onMounted(() => {
   getCurrentLocation();
 
   App.addListener('appStateChange', (state) => {
-    if (!state.isActive) {
+    if (!state.isActive && !vueRoute.query.workout) {
       // App has moved to the background, start background tracking
       startBackgroundTracking();
     } else {
@@ -291,3 +372,34 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 </style>
+
+
+<!-- import UIKit
+import CapacitorBackgroundRunner
+import Capacitor
+
+@UIApplicationMain
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var window: UIWindow?
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Override point for customization after application launch.
+        
+        BackgroundRunnerPlugin.registerBackgroundTask()
+        BackgroundRunnerPlugin.handleApplicationDidFinishLaunching(launchOptions: launchOptions)
+        
+        return true
+    }
+    
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+            // ....
+            BackgroundRunnerPlugin.dispatchEvent(event: "remoteNotification", eventArgs: userInfo) { result in
+                switch result {
+                case .success:
+                    completionHandler(.newData)
+                case .failure:
+                    completionHandler(.failed)
+                }
+            }
+        } -->

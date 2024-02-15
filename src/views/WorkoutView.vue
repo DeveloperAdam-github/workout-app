@@ -19,6 +19,7 @@ const timerStarted = ref(false);
 const previousWorkouts = ref(store.lastTenWorkouts);
 const previousWorkoutsFromApple = ref(store.lastTenWorkoutsFromApple);
 const previousCombinedWorkouts = ref(store.combinedLastTwentyWorkouts);
+const previousCardioWorkouts = ref([]);
 const savedRoutines = ref([]);
 const showSavedRoutines = ref(true);
 const loadedRoutinesFromPlan = ref([]);
@@ -118,12 +119,45 @@ const getPreviousWorkouts = async () => {
   // });
 };
 
+const getPreviousCardioWorkouts = async () => {
+  const { data, error } = await supabase
+    .from('cardio_workouts')
+    .select('*')
+    .eq('user_id', user.value.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  previousCardioWorkouts.value = data;
+
+  console.log(data, 'the data for previous cardio');
+
+  if (data) {
+    data.forEach((workout) => {
+      let workoutExists = previousCombinedWorkouts.value.find(
+        (existingWorkout) => {
+          return existingWorkout.id === workout.id;
+        }
+      );
+
+      if (!workoutExists) {
+        previousCombinedWorkouts.value.push(
+          { ...workout, is_cardio: true }
+        );
+      }
+    })
+  }
+
+  console.log(sortedList.value, 'sorted list');
+}
+
 onMounted(() => {
   getPreviousWorkouts();
+  getPreviousCardioWorkouts();
   getRoutines();
 
   // if (typeof window.capacitor !== 'undefined') {
-  getWorkoutsFromApple();
+  //  adam do we want the workouts from apple??
+  // getWorkoutsFromApple();
   // }
 
   if (!userStore.isConnectedToRealTimeDB) {
