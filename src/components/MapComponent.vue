@@ -14,6 +14,7 @@ const props = defineProps(['tracking', 'route', 'isLoadedWorkout', 'workout']);
 const emit = defineEmits(['start-tracking', 'stop-tracking', 'updateRouteData', 'updateTotalDistance']);
 const vueRoute = useRoute();
 
+
 const BackgroundGeolocation = registerPlugin("BackgroundGeolocation");
 let gpsUpdateInterval = null;
 
