@@ -2,14 +2,17 @@
 import TopBar from '../components/TopBar.vue';
 import gym from '../assets/images/gym.png';
 import { useWorkoutStore } from '../stores/workout';
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import supabase from '../supabase';
 import { useUserStore } from '../stores/user';
 import { useRouter } from 'vue-router';
 import { useGlobalStore } from '../stores/global';
+import { saveWorkoutToPreferences, getWorkoutFromPreferences, removeWorkoutFromPreferences } from '../utils/preferences';
 
 import { Plugins } from '@capacitor/core';
 const { DistancePlugin } = Plugins;
+
+const WORKOUT_PREFERENCES_KEY = 'currentWorkout';
 
 const store = useWorkoutStore();
 const userStore = useUserStore();
@@ -38,8 +41,18 @@ const timer = ref({
   seconds: 0,
 });
 
-onMounted(() => {
+onMounted(async () => {
   globalStore.showNav = false;
+  const storedWorkout = await getWorkoutFromPreferences(WORKOUT_PREFERENCES_KEY);
+  if (storedWorkout) {
+    // Use a more user-friendly way to ask if they want to resume, this is just a simple example
+    if (confirm('Do you want to resume your previous workout?')) {
+      freshWorkout.value = storedWorkout;
+      // store.freshWorkout = storedWorkout;
+    } else {
+      await removeWorkoutFromPreferences(WORKOUT_PREFERENCES_KEY);
+    }
+  }
 });
 
 onBeforeUnmount(() => {
@@ -256,6 +269,11 @@ const uploadSets = async (id) => {
 
   router.back();
 };
+
+watch(freshWorkout, (newValue) => {
+  saveWorkoutToPreferences(WORKOUT_PREFERENCES_KEY, newValue).catch(console.error);
+}, { deep: true });
+
 </script>
 
 <template>
@@ -275,8 +293,8 @@ const uploadSets = async (id) => {
           <table class="w-full" v-if="lastThreeWorkoutsForLinking">
             <tr v-for="(workout, index) in lastThreeWorkoutsForLinking" :key="index" class="h-10">
               <td @click="chosenWorkoutToLink.value = workout" :class="workout === chosenWorkoutToLink.value
-                  ? 'bg-secondary text-black'
-                  : ''
+                ? 'bg-secondary text-black'
+                : ''
                 ">
                 {{ workout.workoutType }} <small>{{ workout.calories }}</small>
               </td>
@@ -351,8 +369,8 @@ const uploadSets = async (id) => {
           <div class="flex justify-between">
             <h2 class="font-boldHeadline text-lg">
               <input v-model="exercise.name" type="text" class="text-base p-1 px-2 outline-secondary" :class="exercise.name !== ''
-                  ? 'bg-transparent border-b-2 border-secondary rounded-none text-left p-0'
-                  : 'bg-gray-600 rounded-lg text-center'
+                ? 'bg-transparent border-b-2 border-secondary rounded-none text-left p-0'
+                : 'bg-gray-600 rounded-lg text-center'
                 " placeholder="Exercise Name..." />
             </h2>
             <button class="bg-gray-600 px-3 rounded-lg" @click="removeExerciseFromWorkout(index)">
@@ -376,8 +394,8 @@ const uploadSets = async (id) => {
             <tbody class="text-sm">
               <tr class="h-8" v-for="(set, index) in exercise.sets" :key="index"
                 v-touch:swipe.left="removeSetFromNewExercise(exercise, index)" :class="set.deleted == true
-                    ? 'bg-red-500 animate-ping-once'
-                    : 'transition-all duration-1000 ease-out'
+                  ? 'bg-red-500 animate-ping-once'
+                  : 'transition-all duration-1000 ease-out'
                   ">
                 <td>{{ index + 1 }}</td>
                 <td>

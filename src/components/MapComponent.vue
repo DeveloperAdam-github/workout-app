@@ -60,6 +60,14 @@ function stopBackgroundTracking() {
     BackgroundGeolocation.removeWatcher({ id: watcherId });
     watcherId = null;
 
+    watchEffect(() => {
+      if (props.tracking) {
+        updateRoute();
+      } else {
+        // Stop tracking logic TODO
+      }
+    });
+
     // Update the route on the map
     updateMapRoute();
     recenterMapOnMarker();

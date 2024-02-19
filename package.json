@@ -16,6 +16,7 @@
     "@capacitor/core": "^5.7.0",
     "@capacitor/geolocation": "^5.0.7",
     "@capacitor/ios": "^5.6.0",
+    "@capacitor/preferences": "^5.0.7",
     "@paypal/paypal-js": "^7.0.3",
     "@sentry/vue": "^7.101.1",
     "@supabase/supabase-js": "^2.2.3",

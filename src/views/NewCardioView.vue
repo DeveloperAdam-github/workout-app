@@ -2,14 +2,17 @@
 import MapComponent from '../components/MapComponent.vue';
 import { useUserStore } from "../stores/user";
 import { useRouter, useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted } from 'vue'
 import supabase from '../supabase';
 import { toast } from "vue3-toastify";
 import "vue3-toastify/dist/index.css";
+import { saveCardioToPreferences, getCardioFromPreferences, removeCardioFromPreferences } from '../utils/preferences'
 
 const userStore = useUserStore()
 const router = useRouter();
 const vueRoute = useRoute();
+
+const CARDIO_PREFERNCES_KEY = 'cardioWorkout';
 
 const tracking = ref(false);
 const isLoadedWorkout = ref(false);
@@ -157,37 +160,69 @@ const saveCardioToDB = async () => {
       user_id: userStore.user.id
     }
     // Save to DB
-    await supabase
-      .from('cardio_workouts')
-      .insert(workoutData)
-      .select()
-      .then((response) => {
-        console.log(response, 'response');
-        if (response.data) {
-          save.value = true
-          // toast here?
-          toast("Saved!", {
-            "theme": "dark",
-            "type": "success",
-            "position": "bottom-center",
-            "closeOnClick": false,
-            "pauseOnHover": false,
-            "pauseOnFocusLoss": false,
-            "dangerouslyHTMLString": true
-          })
 
-          setTimeout(() => {
-            router.back();
-          }, 3500);
-        }
-      });
+    try {
+      await supabase
+        .from('cardio_workouts')
+        .insert(workoutData)
+        .select()
+        .then((response) => {
+          console.log(response, 'response');
+          if (response.data) {
+            save.value = true
+            // toast here?
+            toast("Saved!", {
+              "theme": "dark",
+              "type": "success",
+              "position": "bottom-center",
+              "closeOnClick": false,
+              "pauseOnHover": false,
+              "pauseOnFocusLoss": false,
+              "dangerouslyHTMLString": true
+            })
 
-    confirmSave.value = false;
+            setTimeout(() => {
+              router.back();
+            }, 3500);
+          }
+        });
+
+      confirmSave.value = false;
+    } catch (error) {
+      alert(error.message)
+    }
   }
 }
 
+watch(
+  () => ({
+    distance: totalDistance.value,
+    calories: totalCalories.value,
+    routeCoordinates: route.value.geometry.coordinates,
+    time: totalMilliseconds.value,
+    startTime: startTime.value
+  }),
+  (newValues, oldValues) => {
+    saveCardioToPreferences(CARDIO_PREFERNCES_KEY, newValues).catch(console.error);
+  },
+  { deep: true }
+);
 
 onMounted(async () => {
+  const storedCardio = await getCardioFromPreferences(CARDIO_PREFERNCES_KEY);
+  if (storedCardio) {
+    if (confirm('You have a saved workout, would you like to continue?')) {
+      route.value.geometry.coordinates = storedCardio.routeCoordinates;
+      totalDistance.value = storedCardio.distance;
+      totalCalories.value = storedCardio.calories;
+      totalMilliseconds.value = storedCardio.time;
+      startTime.value = storedCardio.startTime;
+      updateTime();
+
+    }
+  } else {
+    await removeCardioFromPreferences(CARDIO_PREFERNCES_KEY)
+  }
   if (vueRoute.query.workout) {
     isLoadedWorkout.value = true;
 
@@ -201,6 +236,10 @@ onMounted(async () => {
 
     console.log(workoutData.value, 'the data');
   }
+})
+
+onUnmounted(() => {
+  clearInterval(timerInterval);
 })
 
 

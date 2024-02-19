@@ -324,6 +324,7 @@ onMounted(() => {
           </div>
           <input type="number" placeholder="80" class="bg-transparent border border-primary rounded-md p-1  w-24 h-8">
         </div>
+        <button class="mt-4 w-full bg-secondary px-2 py-1 text-center rounded-full">Update</button>
       </form>
 
       <div class="w-full flex items-center justify-center text-black" v-if="userDetails.account_type !== 'prime'">
