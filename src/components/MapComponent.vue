@@ -15,7 +15,7 @@ const emit = defineEmits(['start-tracking', 'stop-tracking', 'updateRouteData', 
 const vueRoute = useRoute();
 
 const BackgroundGeolocation = registerPlugin("BackgroundGeolocation");
-const gpsUpdateInterval = null;
+let gpsUpdateInterval = null;
 
 const accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
 let latitude = ref(0);
@@ -61,8 +61,7 @@ function stopBackgroundTracking() {
 
     // Update the route on the map
     updateMapRoute();
-
-
+    recenterMapOnMarker();
   }
 }
 
@@ -82,6 +81,26 @@ function updateLocation(location) {
   // updateMapRoute();
 
   // Optionally, calculate and update distance if needed
+
+  if (props.route.geometry.coordinates.length >= 2) {
+    const lastIndex = props.route.geometry.coordinates.length - 1;
+    const prevCoordinate = props.route.geometry.coordinates[lastIndex - 1];
+    const currentCoordinate = props.route.geometry.coordinates[lastIndex];
+    const distance = calculateDistance(
+      prevCoordinate[1], // Latitude of the previous coordinate
+      prevCoordinate[0], // Longitude of the previous coordinate
+      currentCoordinate[1], // Latitude of the current coordinate
+      currentCoordinate[0] // Longitude of the current coordinate
+    );
+
+    // Add the calculated distance to the total distance
+    totalDistance.value += distance;
+
+    // Emit the total distance to the parent component
+    emit('updateTotalDistance', totalDistance.value);
+
+    // Log or display the calculated distance
+  }
 }
 
 
@@ -200,7 +219,6 @@ function updateMapRoute() {
       // Update the existing line source
       map.value.getSource('route').setData(props.route.geometry);
     }
-  } else {
   }
 
   if (props.route.geometry.coordinates.length >= 2) {
@@ -221,6 +239,18 @@ function updateMapRoute() {
     emit('updateTotalDistance', totalDistance.value);
 
     // Log or display the calculated distance
+  }
+
+  recenterMapOnMarker();
+}
+
+function recenterMapOnMarker() {
+  if (map.value && marker.value) {
+    // Use flyTo for a smooth transition
+    map.value.flyTo({
+      center: marker.value.getLngLat(),
+      essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+    });
   }
 }
 

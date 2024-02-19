@@ -7,6 +7,10 @@ import supabase from '../supabase';
 import { toast } from "vue3-toastify";
 import "vue3-toastify/dist/index.css";
 
+const userStore = useUserStore()
+const router = useRouter();
+const vueRoute = useRoute();
+
 const tracking = ref(false);
 const isLoadedWorkout = ref(false);
 const workoutData = ref(null)
@@ -25,18 +29,15 @@ const route = ref({
 });
 let totalDistance = ref(0);
 let totalCalories = ref(0);
-const weightKg = 80; // ADAM - Default set for now change later
+// const weightKg = 80; // ADAM - Default set for now change later
+const weightKg = ref(userStore?.userDetails?.weight ?? 80)
 const confirmSave = ref(false);
 const save = ref(false);
-
-const userStore = useUserStore()
-const router = useRouter();
-const vueRoute = useRoute();
 
 const handleUpdateTotalDistance = (newDistance) => {
   totalDistance.value = newDistance;
 
-  totalCalories.value = calculateCaloriesBurned(weightKg, totalDistance.value);
+  totalCalories.value = calculateCaloriesBurned(weightKg.value, totalDistance.value);
 };
 
 
@@ -45,21 +46,51 @@ const handleUpdateTotalDistance = (newDistance) => {
 function calculateCaloriesBurned(weightKg, distanceKm,) {
   const durationMinutes = totalMilliseconds.value / 60000
   let MET = 3.5; // Moderate walking pace
-  const speed = distanceKm / (durationMinutes / 60); // Speed in km/h
+  // 0.6214 to convert km to miles before we do the speed so all speeds and calories are worked out in miles
+  const distanceMiles = distanceKm * 0.6214;
+  const speedMph = distanceMiles / (durationMinutes / 60); // Speed in km/h
 
-  if (speed < 5) {
-    MET = 3.5; // slow walking
-  } else if (speed >= 5 && speed < 8) {
+  // if (speed <= 3) {
+  //   MET = 3; // slow walking
+  // } else if (speed >= 3 && speed < 4) {
+  //   MET = 4.3; // moderate walking
+  // } else if (speed >= 4 && speed < 5) {
+  //   MET = 7;
+  // } else if (speed >= 5 && speed < 7) {
+  //   MET = 9.5; // brisk walking
+  // } else if (speed >= 7 && speed < 9) {
+  //   MET = 11.6; // slow running
+  // } else if (speed >= 9 && speed < 10) {
+  //   MET = 13.8; // moderate running
+  // } else if (speed >= 10 && speed < 12) {
+  //   MET = 17; // fast running
+  // } else if (speed >= 12) {
+  //   MET = 20; // sprinting
+  // }
+  if (speedMph < 3) {
+    MET = 3; // slow walking
+  } else if (speedMph < 4) {
     MET = 4.3; // moderate walking
-  } else if (speed >= 8) {
-    MET = 5; // brisk walking
+  } else if (speedMph < 5) {
+    MET = 7; // moderate walking, faster pace
+  } else if (speedMph < 7) {
+    MET = 9.5; // brisk walking
+  } else if (speedMph < 9) {
+    MET = 11.6; // slow running
+  } else if (speedMph < 10) {
+    MET = 13.8; // moderate running
+  } else if (speedMph < 12) {
+    MET = 17; // fast running
+  } else {
+    MET = 20; // sprinting
   }
 
-  const caloriesBurned = (MET * weightKg * durationMinutes) / 60;
+  // const caloriesBurned = ((MET * weightKg * 3.5) / 200) * durationMinutes;
+  const durationHours = durationMinutes / 60;
+  const caloriesBurned = MET * weightKg * durationHours;
+
   return caloriesBurned;
 }
-
-
 
 // TODO!!!!!  
 function handleUpdateRouteData(newRouteData) {
