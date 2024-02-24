@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watchEffect, defineEmits, onUnmounted } from 'vue';
+import { ref, onMounted, watchEffect, defineEmits, onUnmounted, watch } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import { useRoute } from 'vue-router';
 import { Geolocation } from '@capacitor/geolocation';
@@ -283,6 +283,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 async function getCurrentLocation() {
   if (vueRoute.query.workout) {
     setTimeout(() => {
+      console.log(props.workout, 'whats in the props');
       const coordinates = props.workout.cardio_coords.coords[0]
       latitude.value = coordinates[1]
       longitude.value = coordinates[0]
@@ -299,7 +300,7 @@ async function getCurrentLocation() {
       marker.value = new mapboxgl.Marker()
         .setLngLat([longitude.value, latitude.value])
         .addTo(map.value);
-    }, 500)
+    }, 1000)
 
     // watchEffect(() => {
     //   if (props.workout.cardio_coords) {
@@ -325,8 +326,19 @@ async function getCurrentLocation() {
     //   }
     // });
 
+    watch(
+      () => ({
+        map: map.value.style,
+      }),
+      (newValues, oldValues) => {
+        console.log(newValues, 'old');
+        console.log(oldValues, 'new');
+      },
+      { deep: true }
+    );
 
     setTimeout(() => {
+      console.log(map.value, 'whats in the map value');
       if (map.value && props.workout.cardio_coords.coords.length > 1) {
         if (!map.value.getSource('route')) {
           map.value.addSource('route', {
@@ -351,7 +363,7 @@ async function getCurrentLocation() {
           map.value.getSource('route').setData({ type: 'LineString', coordinates: props.workout.cardio_coords.coords.length.coords });
         }
       }
-    }, 1000)
+    }, 2000)
   } else {
     const coordinates = await Geolocation.getCurrentPosition();
     latitude.value = coordinates.coords.latitude;

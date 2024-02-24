@@ -210,7 +210,7 @@ watch(
 
 onMounted(async () => {
   const storedCardio = await getCardioFromPreferences(CARDIO_PREFERNCES_KEY);
-  if (storedCardio) {
+  if (storedCardio && !vueRoute.query.workout) {
     if (confirm('You have a saved workout, would you like to continue?')) {
       route.value.geometry.coordinates = storedCardio.routeCoordinates;
       totalDistance.value = storedCardio.distance;
