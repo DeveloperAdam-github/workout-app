@@ -1,5 +1,6 @@
 <script setup>
 import TopBar from '../components/TopBar.vue';
+import SearchInput from '../components/SearchInput.vue';
 import gym from '../assets/images/gym.png';
 import { useWorkoutStore } from '../stores/workout';
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
@@ -270,6 +271,13 @@ const uploadSets = async (id) => {
   router.back();
 };
 
+const handleSelect = (selectedExercise, currentExercise) => {
+  console.log(selectedExercise, 'the selected exercise');
+  console.log(currentExercise, 'the  exercise');
+
+  currentExercise.name = selectedExercise
+}
+
 watch(freshWorkout, (newValue) => {
   saveWorkoutToPreferences(WORKOUT_PREFERENCES_KEY, newValue).catch(console.error);
 }, { deep: true });
@@ -366,14 +374,16 @@ watch(freshWorkout, (newValue) => {
       <div class="w-full h-full p-4 flex flex-col">
         <!-- first set -->
         <div class="w-full flex flex-col mt-6 carousel-item" v-for="(exercise, index) in freshWorkout.exercises">
-          <div class="flex justify-between">
-            <h2 class="font-boldHeadline text-lg">
-              <input v-model="exercise.name" type="text" class="text-base p-1 px-2 outline-secondary" :class="exercise.name !== ''
+          <div class="flex justify-between relative">
+            <SearchInput class="mr-20" :show="true" :text="exercise.name"
+              @select="(selectedExercise) => handleSelect(selectedExercise, exercise)" />
+            <!-- <h2 class="font-boldHeadline text-lg"> -->
+            <!-- <input v-model="exercise.name" type="text" class="text-base p-1 px-2 outline-secondary" :class="exercise.name !== ''
                 ? 'bg-transparent border-b-2 border-secondary rounded-none text-left p-0'
-                : 'bg-gray-600 rounded-lg text-center'
-                " placeholder="Exercise Name..." />
-            </h2>
-            <button class="bg-gray-600 px-3 rounded-lg" @click="removeExerciseFromWorkout(index)">
+                : 'bg-gray-600 rounded-lg'
+                " placeholder="Exercise Name..." /> -->
+            <!-- </h2> -->
+            <button class="bg-gray-600 px-3 rounded-lg absolute right-0 h-9" @click="removeExerciseFromWorkout(index)">
               <!-- <i class="fa-solid fa-ellipsis"></i> -->
               <i class="fa-solid fa-trash text-sm"></i>
             </button>

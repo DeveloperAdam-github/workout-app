@@ -117,13 +117,13 @@ const test = () => {
         <div class="inner">
           <div class="flex flex-col">
             <label for="">Plan name:</label>
-            <input class="bg-transparent pl-2 border my-2 h-8 rounded-md border-primary" type="text" placeholder=""
-              v-model="plan.plan_name">
+            <input class="bg-transparent pl-2 border my-2 h-8 rounded-md border-primary focus:outline-none" type="text"
+              placeholder="" v-model="plan.plan_name">
 
             <label for="">Plan Price:</label>
             <div class="bg-transparent pl-2 border my-2 h-8 rounded-md border-primary flex items-center">
               <p class="">£</p>
-              <input class="bg-transparent w-full" type="number" v-model="planPrice">
+              <input class="bg-transparent w-full focus:outline-none" type="number" v-model="planPrice">
             </div>
 
             <button class="w-full bg-blue-500 text-white h-8 rounded-md my-2" @click="">Save</button>
@@ -146,7 +146,7 @@ const test = () => {
       <PlanRoutine :workout="workout" />
     </div> -->
 
-    <div v-if="workout" class="flex flex-col mt-4 bg-white shadow-xl rounded-md p-4">
+    <div v-if="workout" class="flex flex-col mt-4 bg-white shadow-xl rounded-md p-4 overflow-scroll">
       <div class="flex justify-between my-4 items-center"
         @click="expandedBox = expandedBox === 'routineSettings' ? null : 'routineSettings'">
         <h2 class="text-lg font-boldHeadline">
@@ -174,7 +174,7 @@ const test = () => {
       </div>
       <div v-else class="w-full h-full items-center justify-center flex flex-col">
         <label for="">Routine/Workout Name</label>
-        <input type="text" class="bg-transparent border rounded-md pl-2 my-2 border-black w-5/6"
+        <input type="text" class="bg-transparent border rounded-md pl-2 my-2 border-black w-5/ focus:outline-none"
           v-model="createWorkoutName">
         <button class="px-4 my-4 py-2 bg-primary text-white rounded-full" @click="saveRoutineNameAndCreate">Create
           Routine</button>

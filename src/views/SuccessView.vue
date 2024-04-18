@@ -27,7 +27,7 @@ import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '../stores/user'
 import supabase from '../supabase';
-import confetti from "https://cdn.skypack.dev/canvas-confetti";
+// import confetti from "https://cdn.skypack.dev/canvas-confetti";
 
 const plan = ref('');
 
@@ -71,16 +71,28 @@ onMounted(async () => {
 
         if (planError) throw userError;
 
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .update({ account_type: 'prime' })
-          .eq('id', tokenRecord.user_id)
+        if (planData[0].product_name === 'Prime Plan') {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .update({ account_type: 'prime' })
+            .eq('id', tokenRecord.user_id)
 
-        userStore.userDetails.account_type = 'prime'
+          userStore.userDetails.account_type = 'prime'
 
 
-        console.log(userData, 'update data');
-        console.log(userError, 'update error');
+          console.log(userData, 'update data');
+          console.log(userError, 'update error');
+        } else {
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .update({ account_type: 'subscribed' })
+            .eq('id', tokenRecord.user_id)
+
+          userStore.userDetails.account_type = 'subscribed'
+
+          console.log(userData, 'update data');
+          console.log(userError, 'update error');
+        }
         if (updateData.length === 0) {
           console.log('No records updated, possibly due to RLS policies or non-existent token.');
         } else {

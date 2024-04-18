@@ -10,12 +10,12 @@ export default defineComponent({
   components: { BarChart },
   setup() {
     const testData = {
-      labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],
+      labels: ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'],
       datasets: [
         {
           data: [3, 1, 2, 0, 1],
           backgroundColor: ['#192126', '#bbf246', '#50535E'],
-          label: 'Workouts per week',
+          label: 'Workouts this week',
         },
       ],
     };

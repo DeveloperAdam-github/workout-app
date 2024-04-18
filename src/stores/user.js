@@ -26,6 +26,10 @@ export const useUserStore = defineStore('user', () => {
   const hasPrimeStripeAccount = ref(false);
   const createdPlans = ref([]);
   const isConnectedToRealTimeDB = ref(false)
+  const isSubscribedToPlan = ref(false);
+  const subscribedPlan = ref({})
+  // Computed property to find today's workout
+
 
 
   // const userDetails = ref({
@@ -37,6 +41,7 @@ export const useUserStore = defineStore('user', () => {
   //   goals: [],
   //   account_type: 'default',
   // });
+
 
   async function signInWithEmail(email) {
     const { data, error } = await supabase.auth.signInWithOtp({
@@ -168,6 +173,9 @@ export const useUserStore = defineStore('user', () => {
       globalStore.showNav = true;
       userDetails.value = data[0];
       localStorage.setItem('userDetails', JSON.stringify(data[0]));
+      if (data[0].account_type == 'subscribed') {
+        getSubscribedPlansIfSubscribed();
+      }
     }
   };
 
@@ -197,6 +205,26 @@ export const useUserStore = defineStore('user', () => {
 
   //   createdPlans.value = data;
   // }
+
+  const getSubscribedPlansIfSubscribed = async () => {
+    const { data, error } = await supabase
+      .from('subscribed_plans')
+      .select('product_id')
+      .eq('subscription_user', user.value.id)
+
+    let productId = data[0].product_id
+
+    const { data: planData, error: planError } = await supabase
+      .from('created_plans')
+      .select(
+        `id, plan_name, plan_price, plan_description, plan_workouts(id, plan_id, plan_days(*, plan_exercises(*, plan_sets(*))))`
+      )
+      .eq('product_id', productId)
+
+
+    console.log(planData, 'should be the full data?')
+    subscribedPlan.value = planData
+  }
 
   const logout = async () => {
     try {
@@ -278,6 +306,8 @@ export const useUserStore = defineStore('user', () => {
     createdPlans,
     isConnectedToRealTimeDB,
     subscribeToChannel,
-    logout
+    logout,
+    getSubscribedPlansIfSubscribed,
+    subscribedPlan
   };
 });

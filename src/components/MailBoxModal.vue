@@ -2,8 +2,7 @@
   <div class="w-full h-full top-0 left-0 absolute z-20 text-black" v-show="global.showMailBox === true">
     <div class="w-full h-full bg-black/70 flex items-center justify-center flex-col" @click="global.showMailBox = false">
       <div v-if="global.showMailBox === true && global.isLoadedMessage === false"
-        class="w-[90%] h-fit p-4 rounded-lg shadow-xl bg-white overflow-scroll flex flex-col items-center justify-center"
-        @click.stop>
+        class="w-[90%] h-[70%] p-4 rounded-lg shadow-xl bg-white overflow-scroll flex flex-col items-center " @click.stop>
         <div class="w-full flex justify-center items-center flex-col">
           <h1 class="mb-2 uppercase text-black font-boldHeadline ">Welcome to your mailbox
           </h1>
@@ -47,7 +46,6 @@
         <button class="bg-primary px-2 py-1 rounded-md text-white my-4" @click="messageAction">Subscribe</button>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -82,14 +80,10 @@ const getMessages = async () => {
   data.forEach(message => {
     global.messages.push(message)
   });
-
-  console.log(global.messages, 'the message array?');
 }
 
 const messageAction = () => {
-  console.log('clicking');
   if (global.loadedMessage.message_action.action === 'subscription') {
-    console.log('made it in here?');
     const priceId = global.loadedMessage.message_action.price_id;
     const accountId = global.loadedMessage.message_action.account_id
     createCheckoutSession(priceId, accountId)
@@ -98,7 +92,6 @@ const messageAction = () => {
 
 
 const createCheckoutSession = async (priceId, accountId) => {
-  console.log('creating session?');
   let userToken = userStore.userSession.access_token;
   let userId = userStore.user.id
   let stripe;

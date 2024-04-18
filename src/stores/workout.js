@@ -23,6 +23,11 @@ export const useWorkoutStore = defineStore('workout', () => {
   });
   const user = ref(store.user)
   const groupedWorkouts = ref({})
+  const exerciseList = ref([]);
+
+  // Dates for stats
+  const previousWorkoutDates = ref([]);
+  const previousCardioDates = ref([]);
 
   const workoutDetails = ref({
     name: '',
@@ -51,8 +56,20 @@ export const useWorkoutStore = defineStore('workout', () => {
     calories: '',
   });
 
-  function pickChosenWorkout(value) {
-    chosenWorkout.value = value;
+  function pickChosenWorkout(workout, type) {
+    console.log(workout, 'what is the value?', type);
+
+    if (type === 'plan_routine') {
+      workout.exercises = workout.plan_exercises.map(exercise => ({
+        ...exercise,
+        sets: exercise.plan_sets.map(set => ({
+          ...set,
+          completed: false,
+        }))
+      }));
+    }
+    chosenWorkout.value = workout;
+    chosenWorkout.value.workout_name = workout.day_name
     loadPreBuiltWorkout.value = true;
   }
 
@@ -124,6 +141,60 @@ export const useWorkoutStore = defineStore('workout', () => {
     return groupedWorkouts.value;
   }
 
+  const getAllPreviousWorkoutDates = async () => {
+    const { data, error } = await supabase
+      .from('workouts')
+      .select('id, created_at')
+      .eq('user', user.value.id)
+      // .eq('is_routine', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching workouts:', error);
+      return;
+    }
+
+    // Transform the created_at to a simple YYYY-MM-DD format
+    const formattedDates = data.map(item => {
+      // Extract just the date part from the created_at timestamp
+      const datePart = item.created_at.split('T')[0];
+      return {
+        ...item,
+        created_at: datePart
+      };
+    });
+
+    console.log(formattedDates, 'Transformed dates');
+    previousWorkoutDates.value = formattedDates;
+  };
+
+
+
+  const getAllPreviousCardioDates = async () => {
+    const { data, error } = await supabase
+      .from('cardio_workouts')
+      .select('id, created_at')
+      .eq('user_id', user.value.id)
+      // .eq('is_routine', false)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching workouts:', error);
+      return;
+    }
+
+    const formattedDates = data.map(item => {
+      const datePart = item.created_at.split('T')[0];
+      return {
+        ...item,
+        created_at: datePart,
+      }
+    })
+
+    previousCardioDates.value = formattedDates
+  }
+
+
 
   return {
     workout,
@@ -142,6 +213,11 @@ export const useWorkoutStore = defineStore('workout', () => {
     loadPreBuiltWorkout,
     setRoutineBackToTemplate,
     getAllPreviousWorkouts,
-    groupedWorkouts
+    getAllPreviousWorkoutDates,
+    previousWorkoutDates,
+    getAllPreviousCardioDates,
+    previousCardioDates,
+    groupedWorkouts,
+    exerciseList
   };
 });

@@ -233,8 +233,6 @@ onMounted(async () => {
 
     workoutData.value = data[0]
     // route.value.geometry.coordinates = data[0].cardio_coords.coords;
-
-    console.log(workoutData.value, 'the data');
   }
 })
 

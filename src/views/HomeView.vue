@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useUserStore } from '../stores/user';
 import { useGlobalStore } from '../stores/global';
 import { usePopularWorkoutStore } from '../stores/popularWorkouts';
@@ -93,13 +93,46 @@ const options = {
 const todayString = today.toLocaleDateString('en-UK', options);
 
 const goBackToResendCode = () => {
-  console.log('clinkin');
   store.userHold = false;
 };
 
 const toggleWorkoutList = () => {
   workoutsShown.value = !workoutsShown.value;
 };
+
+const getTodayShortName = () => {
+  const today = new Date();
+  return today.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+};
+
+const dateFormatter = computed(() => {
+
+})
+
+const todaysWorkout = computed(() => {
+  const todayShortName = getTodayShortName();
+  let todaysPlan = [];
+
+  // Assuming subscribedPlan is an array of plan objects
+  if (store.subscribedPlan.length > 0) {
+    for (const plan of store.subscribedPlan) {
+      for (const workout of plan.plan_workouts) {
+        for (const day of workout.plan_days) {
+          if (day.day_set.toLowerCase() === todayShortName) {
+            // Found today's workout plan, so set todaysPlan and break the loop
+            todaysPlan.push(day)
+            break;
+          }
+        }
+        if (todaysPlan) break; // Break the outer loop if today's plan was found
+      }
+      if (todaysPlan) break; // Break the outermost loop if today's plan was found
+    }
+
+    return todaysPlan;
+
+  }
+});
 </script>
 
 <template>
@@ -179,21 +212,51 @@ const toggleWorkoutList = () => {
       </transition>
 
       <!-- Todays plan -->
-      <div class="w-full h-3/5 px-4 flex flex-col carousel-vertical pb-20">
+      <div class="w-full h-3/5 px-4 flex flex-col carousel-vertical pb-20 mt-2">
         <p class="my-4 carousel-item">Todays Plan</p>
         <!-- <div
           class="w-full flex items-center flex-col carousel-item"
         > -->
+        <!-- Get the planned workouts -->
+        <div class="flex flex-col" v-if="todaysWorkout">
+          <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4"
+            v-for="(workout, index) in todaysWorkout">
+            <div class="w-16 mr-4 h-full rounded-lg flex items-center justify-center bg-gray-200">
+              <i class="fa-solid fa-dumbbell text-4xl"></i>
+            </div>
+            <div class="w-max flex flex-col">
+              <h2 class="text-lg">{{ workout.day_name }}</h2>
+              <small class="text-xs text-gray-600">{{ todayString }}</small>
+            </div>
+          </div>
+          <!-- <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4">
+            <div class="w-16 mr-4 h-full rounded-lg flex items-center justify-center bg-gray-200">
+              <i class="fa-solid fa-person-running text-4xl"></i>
+            </div>
+            <div class="w-max flex flex-col">
+              <h2 class="text-lg">Light run 5km</h2>
+              <small class="text-xs text-gray-600">{{ todayString }}</small>
+            </div>
+          </div> -->
+        </div>
+        <p class="mb-2">No plans for today...</p>
+        <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4">
+          <div class="w-16 mr-4 h-full rounded-lg flex items-center justify-center bg-gray-200">
+            <i class="fa-solid fa-person-running text-4xl"></i>
+          </div>
+          <div class="w-max flex flex-col">
+            <h2 class="text-lg">Start a cardio workout</h2>
+          </div>
+        </div>
         <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4">
           <div class="w-16 mr-4 h-full rounded-lg flex items-center justify-center bg-gray-200">
             <i class="fa-solid fa-dumbbell text-4xl"></i>
           </div>
           <div class="w-max flex flex-col">
-            <h2 class="text-lg">Push day - heavy</h2>
-            <small class="text-xs text-gray-600">{{ todayString }}</small>
+            <h2 class="text-lg">Start a weight workout</h2>
           </div>
         </div>
-        <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4">
+        <!-- <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4">
           <div class="w-16 mr-4 h-full rounded-lg flex items-center justify-center bg-gray-200">
             <i class="fa-solid fa-person-running text-4xl"></i>
           </div>
@@ -201,16 +264,7 @@ const toggleWorkoutList = () => {
             <h2 class="text-lg">Light run 5km</h2>
             <small class="text-xs text-gray-600">{{ todayString }}</small>
           </div>
-        </div>
-        <div class="w-full bg-white rounded-lg shadow-xl h-20 flex p-4 items-center mb-4">
-          <div class="w-16 mr-4 h-full rounded-lg flex items-center justify-center bg-gray-200">
-            <i class="fa-solid fa-person-running text-4xl"></i>
-          </div>
-          <div class="w-max flex flex-col">
-            <h2 class="text-lg">Light run 5km</h2>
-            <small class="text-xs text-gray-600">{{ todayString }}</small>
-          </div>
-        </div>
+        </div> -->
         <!-- </div> -->
         <!-- Discover -->
         <p class="mb-4 carousel-item">Discover</p>
@@ -233,22 +287,20 @@ const toggleWorkoutList = () => {
           </div>
         </div>
         <div class="w-full flex items-center flex-col carousel-item">
-          <div class="w-full bg-white rounded-lg shadow-xl h-36 flex p-4 items-center mb-4">
-            <div
-              class="w-1/3 mr-2 h-full rounded-lg flex items-center justify-center bg-gray-200 bg-center bg-cover relative"
-              :style="{
-                'background-image': `linear-gradient(to bottom, rgba(1,1,1,0.25), rgba(255,255,255,0.000001)), url(${man})`,
-              }">
-              <div class="bg-secondary h-8 w-8 rounded-full items-center flex justify-center">
-                <i class="fa-solid fa-play text-xs pl-0.5"></i>
+          <RouterLink class="w-full" to="/discover-trainers">
+            <div class="w-full bg-white rounded-lg shadow-xl h-36 flex p-4 items-center mb-4">
+              <div
+                class="w-1/3 mr-2 h-full rounded-lg flex items-center justify-center bg-gray-200 bg-center bg-cover relative"
+                :style="{
+                  'background-image': `linear-gradient(to bottom, rgba(1,1,1,0.25), rgba(255,255,255,0.000001)), url(${man})`,
+                }">
+              </div>
+              <div class="w-3/4 px-2 flex flex-col">
+                <h2 class="text-lg font-boldHeadline">Discover Trainers</h2>
+                <small class="text-xs">Discover trainers to sign up to a plan</small>
               </div>
             </div>
-            <div class="w-3/4 px-2 flex flex-col">
-              <h2 class="text-lg font-boldHeadline">Discover exercises</h2>
-              <small class="text-xs">See the full libary of videos on how to perform exercises and
-                the benefits of the specific exercise.</small>
-            </div>
-          </div>
+          </RouterLink>
         </div>
         <div class="w-full flex items-center flex-col carousel-item">
           <div class="w-full bg-white rounded-lg shadow-xl h-36 flex p-4 items-center mb-4">

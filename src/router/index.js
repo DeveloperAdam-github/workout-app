@@ -11,6 +11,8 @@ import SuccessView from '../views/SuccessView.vue';
 import SignupSuccessView from '../views/SignupSuccessView.vue';
 import ConnectSuccessView from '../views/ConnectSuccessView.vue';
 import EditPlanView from '../views/EditPlanView.vue';
+import DiscoverTrainersView from '../views/DiscoverTrainers.vue';
+import TrainerView from '../views/TrainerView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -75,6 +77,16 @@ const router = createRouter({
       path: '/edit-plan/:id',
       name: 'editPlan',
       component: EditPlanView
+    },
+    {
+      path: '/discover-trainers',
+      name: 'discoverTrainers',
+      component: DiscoverTrainersView
+    },
+    {
+      path: '/trainer-view/:id',
+      name: 'TrainerView',
+      component: TrainerView
     }
   ],
 });

@@ -22,7 +22,7 @@ const previousCombinedWorkouts = ref(store.combinedLastTwentyWorkouts);
 const previousCardioWorkouts = ref([]);
 const savedRoutines = ref([]);
 const showSavedRoutines = ref(true);
-const loadedRoutinesFromPlan = ref([]);
+const loadedRoutinesFromPlan = ref(userStore.subscribedPlan);
 const timer = ref({
   time: null,
   minutes: 0,
@@ -364,12 +364,15 @@ const toggleRoutines = () => {
     </div>
     <div class="w-full flex h-full flex-col p-4">
       <div class="flex items-center">
-        <p class="mr-4">Your routines</p>
-        <i @click="toggleRoutines" class="fa-solid fa-shuffle"></i>
+        <p class="mr-4" v-if="showSavedRoutines">Your routines</p>
+        <p class="mr-4" v-else>Your Subscribed Plan</p>
+        <button class="px-2 py-1 rounded-md bg-secondary text-black text-sm" v-if="loadedRoutinesFromPlan?.length > 0">
+          <i @click="toggleRoutines" class="fa-solid fa-shuffle"></i>
+        </button>
       </div>
       <div class="carousel w-full py-4" v-if="showSavedRoutines">
         <!-- Start workout when clicking it on? -->
-        <YourRoutine v-for="(routine, index) in savedRoutines" :key="index" :routine="routine" />
+        <!-- <YourRoutine v-for="(routine, index) in savedRoutines" :key="index" :routine="routine" /> -->
         <div
           class="h-40 p-4 w-3/4 text-black flex-col bg-white shadow-md rounded-lg carousel-item mr-4 flex items-center justify-center">
           <RouterLink to="/add-workout" class="h-full w-full flex items-center justify-center flex-col">
@@ -381,15 +384,17 @@ const toggleRoutines = () => {
         </div>
       </div>
       <div class="carousel w-full py-4" v-else>
-        <YourRoutine v-for="(routine, index) in loadedRoutinesFromPlan" :key="index" :routine="routine" />
+        <YourRoutine v-if="loadedRoutinesFromPlan"
+          v-for="(routine, index) in loadedRoutinesFromPlan[0].plan_workouts[0].plan_days" :key="index"
+          :routine="routine" />
         <div
           class="h-40 p-4 w-3/4 text-black flex-col bg-white shadow-md rounded-lg carousel-item mr-4 flex items-center justify-center">
-          <RouterLink to="/add-workout" class="h-full w-full flex items-center justify-center flex-col">
+          <!-- <RouterLink to="/add-workout" class="h-full w-full flex items-center justify-center flex-col">
             <p>Add New Routine</p>
             <div class="h-10 w-10 mt-4 rounded-full border border-gray-500 flex items-center justify-center">
               <i class="fa-solid fa-plus text-gray-500"></i>
             </div>
-          </RouterLink>
+          </RouterLink> -->
         </div>
       </div>
       <div class="w-full py-4 flex">

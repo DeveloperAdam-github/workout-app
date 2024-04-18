@@ -12,7 +12,12 @@ const store = useWorkoutStore()
 const userStore = useUserStore()
 
 onMounted(() => {
-  store.getAllPreviousWorkouts()
+  // Different direction?
+  // store.getAllPreviousWorkouts()
+
+  // New direction
+  store.getAllPreviousWorkoutDates()
+  store.getAllPreviousCardioDates()
 
   if (!userStore.isConnectedToRealTimeDB) {
     userStore.subscribeToChannel()
@@ -21,14 +26,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="text-black h-full w-full bg-gray-200 flex flex-col">
+  <main class="text-black h-full w-full bg-gray-200 flex flex-col overflow-scroll">
     <TopBar :title="'Statistics'" />
-    <div class="w-full flex flex-col p-4">
+    <div class="w-full flex flex-col p-4 mb-20">
       <p>Dashboard</p>
       <div class="w-full carousel mt-4 py-4">
-        <div class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4">
+        <!-- <div class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4">
           <WorkoutsPerWeek />
-        </div>
+        </div> -->
         <div class="h-48 w-3/4 rounded-lg bg-white shadow-xl carousel-item mr-4">
           <WeightTrackGraph />
         </div>

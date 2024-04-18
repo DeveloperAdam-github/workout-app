@@ -1,17 +1,17 @@
 <template>
   <div class="w-full flex flex-col overflow-scroll mb-10">
     <h1>Routine Name:</h1>
-    <input class="w-full rounded-md bg-transparent border border-black pl-2 h-8" type="text"
+    <input class="w-full rounded-md bg-transparent border border-black pl-2 h-8 focus:outline-none" type="text"
       v-model="workout.workout_name" />
 
     <div class="w-full flex flex-col mt-4">
       <div class="flex flex-col w-full mb-" v-for="(day, index) in days" :key="index">
         <div class="w-full mb-2 flex items-center flex-col overflow-hidden"
-          :class="selectedDay === day.id ? 'max-h-fit' : 'max-h-10'">
+          :class="selectedDay === day.id ? 'max-h-fit' : 'max-h-11'">
           <div class="w-full flex items-center justify-between relative mb-1">
-            <h2 class="text-xl w-full flex items-center justify-center text-center  rounded-md py-1 transition-all"
+            <h2 class="text-xl w-full flex items-center justify-center text-center  rounded-md py-2 transition-all"
               @click="selectDay(day)" v-touch:swipe.left="() => removeDay(day.id, index)"
-              :class="selectedDay === day.id && !day.startDelete ? 'bg-secondary border-b-4 border-gray-500' : day.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
+              :class="selectedDay === day.id && !day.startDelete ? 'bg-secondary border-b-4 border-black' : day.startDelete ? 'bg-red-500 border-none w-5/6' : 'bg-gray-600 text-white'">
               {{ day.day_name
               }}
             </h2>
@@ -45,7 +45,7 @@
                   : 'transition-all duration-1000 ease-out'
                   ">
                 <div class="w-full flex justify-between items-center">
-                  <label for="" class="mb-1 text-sm">Set {{ set.id }}</label>
+                  <label for="" class="mb-1 text-sm">Set {{ index + 1 }}</label>
 
                   <!-- Toggle between percentge and kilos -->
                   <!-- <div class="flex items-center">
@@ -99,14 +99,18 @@
               </div>
             </div>
           </div> -->
-          <input v-if="addExerciseToggle" v-model="exerciseName" type="text"
+          <SearchInput class="" @select="handleSelect" :text="exerciseName" :show="addExerciseToggle"
+            @selectedOption="isOptionSelected" />
+          <!-- <input v-if="addExerciseToggle" v-model="exerciseName" type="text"
             class="w-full bg-white text-black mb-2 border h-8 rounded-md pl-2 mt-2"
-            :class="exerciseError ? 'border-red-500' : 'border-black'" placeholder="Exercise Name..">
+            :class="exerciseError ? 'border-red-500' : 'border-black'" placeholder="Exercise Name.."> -->
           <small class="text-red-500" v-if="exerciseError">{{ exerciseError }}</small>
-          <button class="w-full bg-primary text-white h-8 rounded-md my-2 mb-6" @click="addExercise(day)">{{
-            addExerciseToggle
-            === false ?
-            'New Exercise' : 'Add Exercise' }}</button>
+          <small class="text-red-500" v-if="showSelectError">Select exercise or pick custom</small>
+          <button class="w-full text-white h-8 rounded-md my-2 mb-6"
+            :class="showSelectError === true ? 'bg-gray-200' : 'bg-primary'" @click="addExercise(day)">{{
+              addExerciseToggle
+              === false ?
+              'New Exercise' : 'Add Exercise' }}</button>
         </div>
       </div>
       <input v-if="addDayToggle" v-model="dayName" type="text"
@@ -136,6 +140,7 @@
 </template>
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import SearchInput from '../components/SearchInput.vue';
 import supabase from '../supabase';
 const workout = ref(props.workout);
 const addDayToggle = ref(false)
@@ -147,10 +152,12 @@ const pageError = ref('')
 const exerciseError = ref('')
 const selectedDay = ref('')
 const selectedExercise = ref('')
+const hasExerciseBeenSelected = ref(false);
+const showSelectError = ref(false)
 const days = ref(workout.value.plan_days.length > 0 ? props.workout.plan_days : [])
 const exercises = ref([]);
+const deletedDays = ref([])
 
-console.log(days, 'show me days');
 
 
 const props = defineProps({
@@ -158,6 +165,24 @@ const props = defineProps({
     type: Object,
   },
 });
+
+const handleSelect = (selectedExercise) => {
+  exerciseName.value = selectedExercise
+  addExerciseToggle.value = true;
+  console.log(exerciseName.value, 'lol here');
+}
+
+const isOptionSelected = (value) => {
+  console.log(value, 'the value inside optionSelected?');
+
+  if (value === true) {
+    hasExerciseBeenSelected.value = true;
+    showSelectError.value = false
+  } else {
+    hasExerciseBeenSelected.value = false;
+    showSelectError.value = true
+  }
+}
 
 const addDay = () => {
   if (addDayToggle.value === false) {
@@ -189,10 +214,10 @@ const addExercise = (day) => {
     return;
   }
 
-  if (exerciseName.value === '') {
-    exerciseError.value = 'Please enter an exercise name'
-    return;
-  }
+  // if (hasExerciseBeenSelected.value === false) {
+  //   exerciseError.value = 'Please select an exercise or choose custom exercise'
+  //   return;
+  // }
 
   const exercise = {
     id: day.plan_exercises.length + 1,
@@ -204,6 +229,7 @@ const addExercise = (day) => {
         set_number: 1,
         weight: 0,
         reps: 0,
+        is_percentage: false,
       }
     ]
   }
@@ -214,15 +240,16 @@ const addExercise = (day) => {
   exerciseError.value = '';
   exerciseName.value = '';
   addExerciseToggle.value = false;
+  hasExerciseBeenSelected.value = false;
 }
 
 const addSet = (exercise) => {
-  console.log(exercise, 'exercise?');
   const set = {
     id: exercise.plan_sets.length + 1,
     set_number: exercise.plan_sets.length + 1,
     weight: 0,
     reps: 0,
+    is_percentage: false,
   }
 
   exercise.plan_sets.push(set);
@@ -248,7 +275,7 @@ const removeSet = (exercise, index) => {
 };
 
 const removeExercise = (day, exercise, index) => {
-  console.log(exercise, index);
+
   if (exercise.startDelete === true) {
     //  remove from array
     day.exercises.splice(index, 1);
@@ -262,23 +289,20 @@ const removeExercise = (day, exercise, index) => {
 }
 
 const removeDay = (dayId, index) => {
-  const foundDay = days.value[index];
 
-  if (foundDay.startDelete) {
-    //  remove from array
-    days.value.splice(index, 1);
-    return;
-  }
+  const foundDay = days.value[index];
 
   foundDay.startDelete = true;
 }
 
 // This is after confirmation of removal.
 const finalRemoveDay = (day, index) => {
-  console.log('click', day);
-  if (day.startDelete === true) {
+
+  if (day.startDelete == true) {
     //  remove from array
     days.value.splice(index, 1);
+
+    deletedDays.value.push(day);
     return;
   }
 }
@@ -314,7 +338,7 @@ const selectDay = (day) => {
 }
 
 const selectExercise = (exercise) => {
-  console.log(exercise, 'the selected exercise');
+
   if (exercise.startDelete === true) {
     exercise.startDelete = false;
     return;
@@ -346,9 +370,31 @@ const saveRoutineToDatabase = async () => {
 
     if (data) {
       const dayIds = data.map(day => day.id);
-      console.log(dayIds, 'dayids before passing');
+
       await saveExercisesToDatabase(dayIds);
     }
+
+    console.log(deletedDays, 'the deleted days?');
+
+    if (deletedDays.value.length > 0) {
+      const deletedDayIds = deletedDays.value.map(day => day.id);
+      console.log(deletedDayIds, 'deleting days ids?');
+
+      // Finally, delete the days themselves
+      const { data: deleteData, error: deleteError } = await supabase
+        .from('plan_days')
+        .delete()
+        .in('id', deletedDayIds);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      console.log(deleteData, 'deleted data');
+
+
+    }
+
   } catch (err) {
     console.error(err);
   }
@@ -356,7 +402,7 @@ const saveRoutineToDatabase = async () => {
 
 const saveExercisesToDatabase = async (dayIds) => {
   const exercisesArray = [];
-  console.log(dayIds, 'the day ids?');
+
 
   days.value.forEach((day, index) => {
     day.plan_exercises.forEach((exercise) => {
@@ -374,7 +420,6 @@ const saveExercisesToDatabase = async (dayIds) => {
       .upsert(exercisesArray, { onConflict: ['name', 'exercise_number', 'plan_day'] })
       .select()
 
-    console.log(data, 'anything here?');
 
     if (error) {
       throw error;
@@ -382,7 +427,7 @@ const saveExercisesToDatabase = async (dayIds) => {
 
     if (data) {
       const exerciseIds = data.map(exercise => exercise.id);
-      console.log(exerciseIds, 'exerciseIds before passing');
+
       await saveSetsToExercisesInDatabase(exerciseIds);
     }
   } catch (err) {
@@ -393,23 +438,26 @@ const saveExercisesToDatabase = async (dayIds) => {
 const saveSetsToExercisesInDatabase = async (exerciseIds) => {
   const setsArray = [];
 
+  let currentIndex = 0;
+
   days.value.forEach((day) => {
-    day.plan_exercises.forEach((exercise, index) => {
+    day.plan_exercises.forEach((exercise) => {
       exercise.plan_sets.forEach((set) => {
-        const { id, created_at, ...setData } = set
+        const { id, created_at, ...setData } = set;
         setsArray.push({
           ...setData,
-          exercise_id: exerciseIds[index]
-        })
-      })
-    })
-  })
+          exercise: exerciseIds[currentIndex]  // Use the currentIndex to get the correct ID
+        });
+      });
+      currentIndex++;  // Move to the next exercise ID after processing all sets for an exercise so we don't double up.
+    });
+  });
 
   try {
     const { data, error } = await supabase
       .from('plan_sets')
-      .upsert(setsArray)
-      .select()
+      // .upsert(setsArray)
+      .upsert(setsArray, { onConflict: ['set_number', 'weight', 'reps', 'exercise'] })
 
     if (error) {
       throw error;

@@ -55,6 +55,8 @@ export const usePrimeStore = defineStore('prime', () => {
       .eq('user_id', userStore.user.id)
 
     createdPlans.value = data;
+
+    console.log(createdPlans.value, 'createdPlans');
   }
 
 

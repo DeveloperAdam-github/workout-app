@@ -29,12 +29,17 @@ const enteredName = ref('What should we call you?');
 const editEnteredName = ref(false);
 const showClients = ref(false);
 const showInviteModal = ref(false);
+const showPlanDetailsModal = ref(false);
 
 
 const usersEmailAddress = ref('');
 const chosenPlan = ref({});
 
 const workouts = ref('');
+
+const getPlanDetails = () => {
+  // Get subscribed plan details here
+}
 
 const getDailySteps = async () => {
   let data = await DistancePlugin.getTodaySteps();
@@ -105,11 +110,16 @@ const getProfilePicture = async () => {
     .from('avatars')
     .getPublicUrl(`public/image-${user.value.id}.png`);
 
-  const avatarUrl = data.publicUrl;
+  if (data) {
+    console.log(data, 'here?');
+    const avatarUrl = data.publicUrl;
 
-  const imgUrl = `${avatarUrl}?_t=${Date.now()}`;
+    const imgUrl = `${avatarUrl}?_t=${Date.now()}`;
 
-  profilePicURL.value = imgUrl;
+    profilePicURL.value = imgUrl;
+  } else {
+    return ''
+  }
 };
 
 // Checking if the profile picture exists.
@@ -178,6 +188,10 @@ const test = (userId) => {
   store.getPrimeDetailsFromDatabase(userId)
 }
 
+const test2 = () => {
+  store.getSubscribedPlansIfSubscribed()
+}
+
 const inviteToPlan = (plan) => {
   console.log(plan, 'the plan info here');
   showInviteModal.value = true;
@@ -219,7 +233,7 @@ const sendInvitationToUser = async () => {
         }
       })
       .then((response) => {
-        console.log(reponse, 'whats in th eresponse??')
+        console.log(response, 'whats in th eresponse??')
       });
     console.log('or here');
   } catch (error) {
@@ -248,6 +262,21 @@ onMounted(() => {
     <SubscriptionModal />
     <StripeAccountModal />
     <MailBoxModal />
+
+    <!-- Plan Details Modal -->
+    <teleport to="body">
+      <div class="w-screen h-screen top-0 left-0 absolute z-20 text-black" v-if="showPlanDetailsModal">
+        <div @click="showPlanDetailsModal = false"
+          class="w-full h-full bg-black/70 flex items-center justify-center flex-col p-8">
+          <div @click.stop class="w-[90%] h-fit rounded-md bg-white shadow-md flex flex-col p-4">
+            <p>Name: {{ store.subscribedPlan[0].plan_name }}</p>
+            <p>Description: {{ store.subscribedPlan[0].plan_name }}</p>
+            <p>Price: {{ store.subscribedPlan[0].plan_name }}</p>
+          </div>
+        </div>
+      </div>
+    </teleport>
+
     <div class="w-full h-full flex flex-col bg-gray-200" v-if="primeStore.showPrimeUserSettings">
       <div class="w-full h-20 bg-primary flex items-end justify-end px-4 relative">
         <div class="w-7 h-7 rounded-full flex items-center justify-center bg-secondary" @click="openSubscriptionModal">
@@ -276,6 +305,9 @@ onMounted(() => {
             </button>
             <button @click="test(store.user.id)">
               Test buttton
+            </button>
+            <button @click="test2()">
+              Test 2
             </button>
           </div>
           <div class="w-1/3 flex flex-col h-full pt-2">
@@ -309,25 +341,34 @@ onMounted(() => {
           <p class="font-boldHeadline text-lg">How you doing today?</p>
         </div>
       </div>
-      <form class="w-full text-black font-bold flex flex-col p-4">
-        <div class="flex justify-between mb-4">
-          <p>Select your metric</p>
+      <form class="w-full text-black font-bold flex flex-col p-4 text-sm">
+        <div class="flex justify-between mb-4 items-center">
+          <p>Select your metric for weight</p>
           <select name="" id="" class="bg-transparent border border-primary rounded-md p-1 w-24 h-8">
             <option value="metric" disabled>Metric</option>
             <option value="KG">KG</option>
             <option value="lbs">lbs</option>
           </select>
         </div>
-        <div class="w-full flex justify-between">
+        <div class="w-full flex justify-between mb-4 items-center">
+          <p>Select your metric for distance</p>
+          <select name="" id="" class="bg-transparent border border-primary rounded-md p-1 w-24 h-8">
+            <option value="metric" disabled>Metric</option>
+            <option value="KG">Miles</option>
+            <option value="lbs">KM</option>
+          </select>
+        </div>
+        <div class="w-full flex justify-between items-center">
           <div class="flex items-center space-x-2">
-            <p>Weight</p>
+            <p>Update your Weight</p>
           </div>
           <input type="number" placeholder="80" class="bg-transparent border border-primary rounded-md p-1  w-24 h-8">
         </div>
-        <button class="mt-4 w-full bg-secondary px-2 py-1 text-center rounded-full">Update</button>
+        <button class="mt-4 w-full bg-secondary px-4 py-2 text-center rounded-md">Update</button>
       </form>
 
-      <div class="w-full flex items-center justify-center text-black" v-if="userDetails.account_type !== 'prime'">
+      <div class="w-full flex items-center justify-center text-black"
+        v-if="userDetails.account_type !== 'prime' && userDetails.account_type !== 'subscribed'">
         <button class="bg-secondary px-3 text-sm uppercase py-1 rounded-2xl font-bold" @click="subscribeToPrimeAccount">
           Subscribe to prime account
         </button>
@@ -344,6 +385,28 @@ onMounted(() => {
           @click="openStripeAccountModal">
           Connect now
         </button>
+      </div>
+      <div class="w-full text-black flex flex-col px-4 items-center justify-center"
+        v-if="userDetails.account_type === 'subscribed'">
+        <h3 class="w-full text-left text-black my-2">Your active plan with:</h3>
+        <div class="w-full bg-white shadow-sm rounded-md p-4">
+          <div class="w-full flex items-center">
+            <div class="h-10 w-10 rounded-full shadow-sm mr-4">
+              <img src="https://upload.wikimedia.org/wikipedia/en/0/02/Homer_Simpson_2006.png"
+                class="w-full h-full rounded-full object-cover object-top" alt="">
+            </div>
+            <p class="text-lg">Big Johns PT</p>
+          </div>
+          <p class="my-2 text-sm">Plan name: 4 day split</p>
+          <div class="flex justify-between my-2">
+            <button @click="showPlanDetailsModal = true;"
+              class="text-xs bg-secondary text-black w-24  py-2 rounded-full">Plan
+              Details</button>
+            <button class="text-xs bg-secondary text-black w-24 py-2 rounded-full">Chat</button>
+            <button class="text-xs bg-secondary text-black w-24 py-2 rounded-full">Rate</button>
+          </div>
+          <p class="text-xxs mt-2">Subscrption ends: 10/05/2024</p>
+        </div>
       </div>
     </div>
     <!-- If viewing prime admin settings -->
