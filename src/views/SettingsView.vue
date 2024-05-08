@@ -367,6 +367,13 @@ onMounted(() => {
         <button class="mt-4 w-full bg-secondary px-4 py-2 text-center rounded-md">Update</button>
       </form>
 
+      <RouterLink to="/settings/explore-options" class="w-full flex items-center justify-center text-black px-4 font-headline"
+        v-if="userDetails.account_type == 'prime'">
+        <button class=" w-full bg-secondary px-4 py-2 text-center rounded-md text-sm">
+          Control your explore options
+        </button>
+      </RouterLink>
+
       <div class="w-full flex items-center justify-center text-black"
         v-if="userDetails.account_type !== 'prime' && userDetails.account_type !== 'subscribed'">
         <button class="bg-secondary px-3 text-sm uppercase py-1 rounded-2xl font-bold" @click="subscribeToPrimeAccount">
@@ -386,6 +393,7 @@ onMounted(() => {
           Connect now
         </button>
       </div>
+      <!-- If user is subscribed get the active plan -->
       <div class="w-full text-black flex flex-col px-4 items-center justify-center"
         v-if="userDetails.account_type === 'subscribed'">
         <h3 class="w-full text-left text-black my-2">Your active plan with:</h3>
@@ -405,7 +413,7 @@ onMounted(() => {
             <button class="text-xs bg-secondary text-black w-24 py-2 rounded-full">Chat</button>
             <button class="text-xs bg-secondary text-black w-24 py-2 rounded-full">Rate</button>
           </div>
-          <p class="text-xxs mt-2">Subscrption ends: 10/05/2024</p>
+          <p class="text-xxs mt-2">Subscription ends: 10/05/2024</p>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import TopBar from '../components/TopBar.vue';
 import StarRating from '../components/StarRating.vue';
 
+// Save trainer list to database when the trainers sign up, make it a choice?
 const trainerList = [
   {
     id: 1,
